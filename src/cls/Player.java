@@ -2,8 +2,6 @@ package cls;
 
 import java.util.ArrayList;
 
-import run.Data;
-
 import cls.unit.Unit;
 
 public class Player {
@@ -20,8 +18,6 @@ public class Player {
 	
 	public Player(int mapWidth, int mapHeight) {
 		units = new ArrayList<Unit>();
-		units.add(Data.getUnit("Engineer").newUnit(this, 4, 4));
-		units.add(Data.getUnit("Engineer").newUnit(this, 5, 7));
 		finishedTurn = true;
 		visibility = new boolean[mapHeight][mapWidth];
 		updateVisibility();
@@ -80,6 +76,11 @@ public class Player {
 		if (j < 0 || j >= map.length) return;
 		if (i < 0 || i >= map[j].length) return;
 		map[j][i] = true;
+	}
+
+	public void addUnit(Unit newUnit) {
+		System.out.println("Adding new unit " + newUnit);
+		units.add(newUnit);
 	}
 	
 }
