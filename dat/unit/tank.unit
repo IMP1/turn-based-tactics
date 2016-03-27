@@ -1,0 +1,8 @@
+Tank
+VEHICLE
+TRACKS 5
+100 100 2 FALSE
+3 3 0 TRUE FALSE
+gfx/unit/tank.png 5 3 0.2
+gfx/unit/tank.png 5 3 0.2
+rifle

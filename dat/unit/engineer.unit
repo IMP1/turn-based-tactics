@@ -3,6 +3,6 @@ INFANTRY
 FOOT 3
 100 100 1 FALSE
 2 0 0 FALSE TRUE
-gfx/unit/tank.png 4 3 0.2
-gfx/unit/tank.png 4 3 0.2
+gfx/unit/commando.png 5 4 0.2
+gfx/unit/commando.png 5 4 0.2
 
