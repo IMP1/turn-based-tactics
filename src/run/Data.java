@@ -25,6 +25,7 @@ public final class Data {
 		for (DataUnit u : units) {
 			if (u.name.equals(name)) return u;
 		}
+		System.out.printf("[Data] No unit with the name '%s'.\n", name);
 		return null;
 	}
 	
@@ -32,6 +33,7 @@ public final class Data {
 		for (DataWeapon w : weapons) {
 			if (w.name.equals(name)) return w;
 		}
+		System.out.printf("[Data] No weapon with the name '%s'.\n", name);
 		return null;
 	}
 	
@@ -46,6 +48,7 @@ public final class Data {
 			try {
 				DataWeapon u = readWeapon("dat/weapon/" + filename);
 				dataWeapons.add(u);
+				System.out.println("[Data] Loaded " + filename);
 			} catch (Exception e) {
 				System.err.printf("Could not read weapon '%s'.\n", filename);
 				e.printStackTrace();
@@ -60,6 +63,7 @@ public final class Data {
 			try {
 				DataUnit u = readUnit("dat/unit/" + filename);
 				dataActors.add(u);
+				System.out.println("[Data] Loaded " + filename);
 			} catch (Exception e) {
 				System.err.printf("Could not read unit '%s'.\n", filename);
 				e.printStackTrace();
