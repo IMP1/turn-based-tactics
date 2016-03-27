@@ -13,20 +13,16 @@ import cls.building.Building;
 import cls.map.Map;
 import cls.map.Tile;
 import cls.unit.Unit;
+import run.Data;
 import run.Settings;
 import scn.Scene;
 
 public class Battle extends Scene {
 	
-	lib.Console console = new lib.Console();
-	
 	private final static int GUI_INFO_BOX_WIDTH = 96;
 	private final static int GUI_INFO_BOX_HEIGHT = 96;
 	private final static int GUI_ORDER_BOX_WIDTH = 128;
 	private final static int GUI_ORDER_BOX_HEIGHT = 256;
-	
-	// TODO: remove debug window/map size recangle
-//	public final static Rectangle MAP_RECT = new Rectangle(0, 0, 960, 640);
 	
 	private final static Animation[] turnAnimations = new Animation[] {
 		new Animation(new jog.Image("gfx/turn_1.png"), 1, 10, 10, false, 0.1),
@@ -44,6 +40,8 @@ public class Battle extends Scene {
 	private int[] selectedUnitPath;
 	private int selectedUnitPathDistance;
 	private boolean[][] selectedUnitAttacks;
+	
+	private Unit movingUnit;
 	
 	private Building selectedBuilding;
 	
@@ -68,15 +66,6 @@ public class Battle extends Scene {
 	public Battle(int playerCount, int mapWidth, int mapHeight, boolean fogOfWar) {
 		players = new Player[playerCount];
 		this.fogOfWar = fogOfWar;
-		console.addAction("damage", new lib.Console.Action() {
-			@Override
-			public void act(String... args) {
-				int damage = Integer.parseInt(args[0]);
-				if (selectedUnit != null) selectedUnit.damage(damage);
-				System.out.println("damaging selected unit for " + damage);
-			}
-		});
-		jog.Event.addKeyboardHandler(console);
 	}
 	
 	@Override
@@ -85,13 +74,21 @@ public class Battle extends Scene {
 		for (int i = 0; i < players.length; i ++) {
 			players[i] = new Player(map.getWidth(), map.getHeight());
 		}
+		// TODO remove debug stuff
+		players[0].addUnit(Data.getUnit("Engineer").newUnit(players[0], 4, 3));
+		players[0].addUnit(Data.getUnit("Commando").newUnit(players[0], 2, 6));
+		players[0].addUnit(Data.getUnit("Tank").newUnit(players[0], 12, 6));
+		players[0].addUnit(Data.getUnit("Helicopter").newUnit(players[0], 2, 10));
+		players[1].addUnit(Data.getUnit("Commando").newUnit(players[1], 8, 3));
+		players[0].updateVisibility();
 		playerTurn = -1;
 		hoveredUnit = null;
 		hoveredBuilding = null;
 		hoveredTile = null;
 		selectedUnit = null;
+		movingUnit = null;
 		selectedBuilding = null;
-		camera = new Camera(0, 0, jog.Window.getWidth(), jog.Window.getHeight()); // TODO: change to map size.
+		camera = new Camera(0, 0, map.getWidth() * Tile.TILE_SIZE, map.getHeight() * Tile.TILE_SIZE);
 		if (fogOfWar) {
 			int w = map.getWidth() * Tile.TILE_SIZE;
 			int h = map.getHeight() * Tile.TILE_SIZE;
@@ -113,6 +110,32 @@ public class Battle extends Scene {
 		playingTurnAnimation = true;
 		turnAnimation = turnAnimations[playerTurn];
 		turnAnimation.start();
+	}
+
+	private Tile getTileAt(int i, int j) {
+		return map.getTileAt(i, j);
+	}
+	
+	private Building getBuildingAt(int i, int j) {
+		return map.getBuildingAt(i, j);
+	}
+	
+	private Unit getUnitAt(int i, int j) {
+		for (Player p : players) {
+			Unit u = p.getUnitAt(i, j);
+			if (u != null) return u;
+		}
+		return null;
+	}
+
+	// TODO: move to Map class
+	private int tileX(double worldX) {
+		return (int)(worldX / Tile.TILE_SIZE);
+	}
+	
+	// TODO: move to map class
+	private int tileY(double worldY) {
+		return (int)(worldY / Tile.TILE_SIZE);
 	}
 	
 	@Override
@@ -142,33 +165,17 @@ public class Battle extends Scene {
 		}
 		hoveredBuilding = getBuildingAt(i, j);
 		hoveredTile = getTileAt(i, j);
-		if (selectedUnit != null) updateSelectedUnitPath(i, j);
-	}
-	
-	private Tile getTileAt(int i, int j) {
-		return map.getTileAt(i, j);
-	}
-	
-	private Building getBuildingAt(int i, int j) {
-		return map.getBuildingAt(i, j);
-	}
-	
-	private Unit getUnitAt(int i, int j) {
-		for (Player p : players) {
-			Unit u = p.getUnitAt(i, j);
-			if (u != null) return u;
+		if (selectedUnit != null && !selectedUnit.hasMoved()) updateSelectedUnitPath(i, j);
+		if (playingMovementAnimation) {
+			movingUnit.getOwner().updateVisibility();
+			if (!movingUnit.isMoving()) {
+				if (movingUnit == selectedUnit) {
+					selectUnit(movingUnit); // reselect it.
+				}
+				movingUnit = null;
+				playingMovementAnimation = false;
+			}
 		}
-		return null;
-	}
-	
-	// TODO: move to Map class
-	private int tileX(double worldX) {
-		return (int)(worldX / Tile.TILE_SIZE);
-	}
-	
-	// TODO: move to map class
-	private int tileY(double worldY) {
-		return (int)(worldY / Tile.TILE_SIZE);
 	}
 	
 	@Override
@@ -248,14 +255,19 @@ public class Battle extends Scene {
 	}
 	
 	private boolean canSelectedUnitMoveTo(int i, int j) {
+		if (j < 0 || j >= selectedUnitMoves.length) return false;
+		if (i < 0 || i >= selectedUnitMoves[j].length) return false;
 		return selectedUnitMoves[j][i];
 	}
 	
 	private boolean canSelectedUnitAttack(int i, int j) {
+		if (j < 0 || j >= selectedUnitAttacks.length) return false;
+		if (i < 0 || i >= selectedUnitAttacks[j].length) return false;
 		return selectedUnitAttacks[j][i];
 	}
 	
 	private boolean[][] calculateUnitMoves(Unit u) {
+		if (u.hasMoved()) return new boolean[0][0];
 		int min = 0;
 		int max = u.getMoveDistance();
 		// TODO write proper movement method that takes terrain into account.
@@ -277,7 +289,7 @@ public class Battle extends Scene {
 	private boolean[][] calculateUnitAttacks(Unit u) {
 		int min = u.getMinimumRange();
 		int max = u.getMaximumRange();
-		if (u.canAttackAndMove()) {
+		if (u.canAttackAndMove() && !u.hasMoved()) {
 			min += u.getMoveDistance();
 			max += u.getMoveDistance();
 		}
@@ -290,23 +302,11 @@ public class Battle extends Scene {
 			int n = selectedUnitPath.length;
 			int dx = i - selectedUnitPath[n-2];
 			int dy = j - selectedUnitPath[n-1];
-			boolean vertical = Math.abs(dx) < Math.abs(dy);
 			if (Math.abs(dx) + Math.abs(dy) > 1) {
-				if (vertical) {
-					i = selectedUnitPath[n-2];
-					j += Math.signum(dy);
-				} else {
-					i += Math.signum(dx);
-					j = selectedUnitPath[n-1];
-				}
-				System.out.printf("Diagonal path attempted. Resolving to %s.\n", vertical ? "vertical" : "horizontal");
+				return;
 			}
 		}
-		
-		
-		System.out.printf("Current Path is %d tiles long.\n", selectedUnitPath.length / 2);
-		System.out.printf("Selected unit can move %d tiles.\n", selectedUnit.getMoveDistance());
-		
+
 		int tileOnPath = -1;
 		for (int n = 0; n < selectedUnitPath.length; n += 2) {
 			if (selectedUnitPath[n] == i && selectedUnitPath[n+1] == j) {
@@ -315,14 +315,13 @@ public class Battle extends Scene {
 		}
 		
 		if (tileOnPath == -1 && selectedUnitPathDistance > selectedUnit.getMoveDistance()) {
-			System.out.printf("End of movement distance.\n");
 			return;
 		}
 		
 		int[] newPath;
 		int newDistance;
 		if (tileOnPath == -1) {
-			System.out.printf("Tile not on path, adding on the end.\n");
+//			System.out.printf("Tile not on path, adding on the end.\n");
 			newDistance = selectedUnitPathDistance + map.getTileAt(i, j).getMovementCost(selectedUnit);
 			if (newDistance > selectedUnit.getMoveDistance()) return;
 			newPath = new int[Math.min(selectedUnitPath.length + 2, (selectedUnit.getMoveDistance() + 1) * 2)];
@@ -334,7 +333,7 @@ public class Battle extends Scene {
 			newPath[newPath.length-1] = j;
 		} else {
 			// TODO interpolate all tiles from last one to this
-			System.out.printf("Tile on path (at %d), reverting back to it.\n", tileOnPath);
+//			System.out.printf("Tile on path (at %d), reverting back to it.\n", tileOnPath);
 			newDistance = 0;
 			newPath = new int[(tileOnPath+1) * 2];
 			for (int n = 0; n < newPath.length; n += 2) {
@@ -346,14 +345,19 @@ public class Battle extends Scene {
 		}
 		selectedUnitPathDistance = newDistance;
 		selectedUnitPath = newPath;
-		System.out.printf("New path is %d tiles long.\n", newPath.length / 2);
+//		System.out.printf("New path is %d tiles long.\n", newPath.length / 2);
 	}
 	
 	private void moveUnit(Unit u, int[] path) {
+		// TODO work out if path is blocked and alter path so it stops at the interruption.
 		System.out.printf("Moving Unit %s.\n", u.name);
 		for (int i = 0; i < path.length; i += 2) {
 			System.out.printf("\t(%d, %d)\n", i, i+1);
 		}
+		u.move(path);
+		movingUnit = u;
+		playingMovementAnimation = true;
+		selectedUnitMoves = null;
 	}
 	
 	@Override
@@ -365,7 +369,7 @@ public class Battle extends Scene {
 				drawUnits();
 				if (playingMovementAnimation) drawUnitMovement();
 			if (fogOfWar) hideFog();
-			if (selectedUnit != null && !playingMovementAnimation) {
+			if (selectedUnit != null && (!playingMovementAnimation || movingUnit != selectedUnit)) {
 				drawSelectedUnitOptions();
 			}
 			if (hoveredUnit != null && hoveredUnit != selectedUnit) {
@@ -377,7 +381,6 @@ public class Battle extends Scene {
 		if (selectedBuilding != null) drawBuildingOptions();
 		if (playingTurnAnimation) jog.Graphics.draw(turnAnimation, 0, 0);
 		if (playingAttackAnimation) drawAttack();
-		console.draw();
 	}
 	
 	private void drawMap() {
@@ -424,8 +427,6 @@ public class Battle extends Scene {
 		for (Player p : players) {
 			p.drawUnits();
 		}
-		jog.Graphics.setColour(255, 0, 0);
-		jog.Graphics.circle(true, 9.5 * Tile.TILE_SIZE, 6.5 * Tile.TILE_SIZE, 32);
 	}
 	
 	private void drawTileGUI() {
@@ -482,11 +483,16 @@ public class Battle extends Scene {
 	private void drawMoveAndAttack(boolean[][] moves, boolean[][] attacks, int opacity) {
 		for (int j = 0; j < moves.length; j ++) {
 			for (int i = 0; i < moves[j].length; i ++) {
+				if (moves[j][i]) {
+					jog.Graphics.setColour(0, 128, 255, opacity);
+					jog.Graphics.rectangle(true, i * Tile.TILE_SIZE, j * Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE);
+				}
+			}
+		}
+		for (int j = 0; j < attacks.length; j ++) {
+			for (int i = 0; i < attacks[j].length; i ++) {
 				if (attacks[j][i]) {
 					jog.Graphics.setColour(255, 64, 64, opacity);
-					jog.Graphics.rectangle(true, i * Tile.TILE_SIZE, j * Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE);
-				} else if (moves[j][i]) {
-					jog.Graphics.setColour(0, 128, 255, opacity);
 					jog.Graphics.rectangle(true, i * Tile.TILE_SIZE, j * Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE);
 				}
 			}
