@@ -1,0 +1,6 @@
+bin/
+.settings/
+gfx/
+
+.classpath
+.project
