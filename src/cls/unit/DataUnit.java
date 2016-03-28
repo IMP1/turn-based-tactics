@@ -1,11 +1,9 @@
 package cls.unit;
 
-import lib.Sprite;
 import cls.Player;
 import cls.unit.Unit.Kind;
 import cls.unit.Unit.Movement;
 import cls.weapon.DataWeapon;
-import cls.weapon.Weapon;
 
 public class DataUnit {
 	
@@ -23,15 +21,15 @@ public class DataUnit {
 	// TODO handle ability to build somewhere
 	public final int             startingFuel;
 	public final int             maxFuel;
-	public final Sprite          sprite;
-	public final Sprite          icon;
+	public final DataSprite      sprite;
+	public final DataSprite      icon;
 	public final DataWeapon[]    weapons;
 	
 	public DataUnit(String name, Kind unitClass, Movement movement, int moveDistance,  
 			        int fuelCost, int startingFuel, int maxFuel, boolean diesOnFuelDepletion,
 			        int visionDistance, int defence, int influence, 
 			        boolean canMoveAndAttack, boolean canBuild, 
-			        Sprite sprite, Sprite icon, DataWeapon[] weapons) {
+			        DataSprite sprite, DataSprite icon, DataWeapon[] weapons) {
 		this.name = name;
 		this.weapons = weapons;
 		this.unitClass = unitClass;
@@ -51,13 +49,7 @@ public class DataUnit {
 	}
 	
 	public Unit newUnit(Player owner, int x, int y) {
-		Weapon[] startingWeapons = new Weapon[weapons.length];
-		for (int i = 0; i < startingWeapons.length; i ++) {
-			startingWeapons[i] = weapons[i].newWeapon();
-		}
-		Unit u = new Unit(name, owner, x, y);
-		u.initialise(unitClass, movement, moveDistance, startingFuel, maxFuel, fuelCost, diesOnFuelDepletion, 
-				     visionDistance, defence, influence, canMoveAndAttack, canBuild, startingWeapons, sprite, icon);
+		Unit u = new Unit(owner, x, y, this);
 		return u;
 	}
 

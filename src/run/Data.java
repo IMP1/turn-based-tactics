@@ -1,8 +1,7 @@
 package run;
 
-import lib.Sprite;
-
 import cls.unit.DataUnit;
+import cls.unit.DataSprite;
 import cls.unit.Unit;
 import cls.unit.Unit.Kind;
 import cls.unit.Unit.Movement;
@@ -80,11 +79,13 @@ public final class Data {
 		int minRange = Integer.valueOf(rangeData[0]);
 		int maxRange = Integer.valueOf(rangeData[1]);
 		
-		String[] ammoData = weaponData[2].split(" ");
+		int damage = Integer.valueOf(weaponData[2]);
+		
+		String[] ammoData = weaponData[3].split(" ");
 		int startingAmmo = Integer.valueOf(ammoData[0]);
 		int maxAmmo = Integer.valueOf(ammoData[1]);
 		
-		String[] unitData = weaponData[3].split(" ");
+		String[] unitData = weaponData[4].split(" ");
 		Unit.Kind[] unitsCanAttack;
 		Unit.Kind[] unitsCannotAttack;
 		if (unitData[0].equals("ALL_BUT")) {
@@ -105,7 +106,14 @@ public final class Data {
 			throw new RuntimeException(message);
 		}
 		
-		return new DataWeapon(name, minRange, maxRange, startingAmmo, maxAmmo, unitsCanAttack, unitsCannotAttack);
+		String[] spriteData = weaponData[5].split(" ");
+		String spriteFilename = spriteData[0];
+		int spritePoses = Integer.valueOf(spriteData[1]);
+		int spriteFrames = Integer.valueOf(spriteData[2]);
+		double spriteDelay = Double.valueOf(spriteData[3]);
+		DataSprite sprite = new DataSprite(spriteFilename, spritePoses, spriteFrames, spriteDelay);
+		
+		return new DataWeapon(name, minRange, maxRange, damage, startingAmmo, maxAmmo, unitsCanAttack, unitsCannotAttack, sprite);
 	}
 	
 	private static DataUnit readUnit(String filename) {
@@ -135,14 +143,14 @@ public final class Data {
 		int spritePoses = Integer.valueOf(spriteData[1]);
 		int spriteFrames = Integer.valueOf(spriteData[2]);
 		double spriteDelay = Double.valueOf(spriteData[3]);
-		Sprite sprite = new Sprite(new jog.Image(spriteFilename), spritePoses, spriteFrames, spriteDelay);
+		DataSprite sprite = new DataSprite(spriteFilename, spritePoses, spriteFrames, spriteDelay);
 		
 		String[] iconData = unitData[6].split(" ");
 		String iconFilename = iconData[0];
 		int iconPoses = Integer.valueOf(iconData[1]);
 		int iconFrames = Integer.valueOf(iconData[2]);
 		double iconDelay = Double.valueOf(iconData[3]);
-		Sprite icon = new Sprite(new jog.Image(iconFilename), iconPoses, iconFrames, iconDelay);
+		DataSprite icon = new DataSprite(iconFilename, iconPoses, iconFrames, iconDelay);
 		
 		DataWeapon[] weapons;
 		if (unitData.length < 8 || unitData[7].isEmpty()) {

@@ -24,48 +24,35 @@ public class Unit extends cls.GameObject {
 		JET_ENGINE,
 	}
 
-	private Kind unitClass;
-	private Movement movementType;
-	private int moveDistance;
-	private int visionDistance;
-	private int defence;
-	private int influence;
-	private int fuelCost;
-	private int maxFuel;
-	private boolean diesOnFuelDepletion;
-	private boolean canAttackAndMove;
-	private boolean canBuild;
+	private DataUnit data;
+
+	public Kind     getUnitKind()       { return data.unitClass;        }
+	public Movement getMovementType()   { return data.movement;         }
+	public int      getMoveDistance()   { return data.moveDistance;     }
+	public int      getVisionDistance() { return data.visionDistance;   }
+	public int      getDefence()        { return data.defence;          }
+	public int      getInfluence()      { return data.influence;        }
+	public boolean  canMoveAndAttack()  { return data.canMoveAndAttack; }
 	
-	private Sprite sprite;
-	private Sprite icon;
-	
-	private Player owner;
-	private int health;
+	private Player   owner;
+	private int      health;
 	private Weapon[] weapons;
-	private int fuel;
-	private boolean hasMoved;
-	private boolean isExhausted;
-	private boolean isMoving;
-	private int[] movePath;
-	private int pathPosition;
-	private double animationX;
-	private double animationY;
+	private int      fuel;
+	private boolean  hasMoved;
+	private boolean  isMoving;
+	private boolean  isExhausted;
+	private int[]    movePath;
+	private int      pathPosition;
+	private double   animationX;
+	private double   animationY;
+	private boolean  isDestroyed;
+	private Sprite   sprite;
+	private Sprite   icon;
 	
-	private boolean isDestroyed;
-	private boolean isInitialised;
-	
-	public Kind getUnitKind() { return unitClass; }
-	public Movement getMovementType() { return movementType; }
-	public int getMoveDistance() { return moveDistance; }
-	public int getVisionDistance() { return visionDistance; }
-	public int getDefence() { return defence; }
-	public int getInfluence() { return influence; }
-	public Player getOwner() { return owner; }
-	public int getHealth() { return health; }
-	public boolean canAttackAndMove() { return canAttackAndMove; }
-	public int getFuel() { return fuel; }
+	public int     getFuel()     { return fuel;        }
 	public boolean isExhausted() { return isExhausted; }
-	
+	public Player  getOwner()    { return owner;       }
+	public int     getHealth()   { return health;      }
 	public boolean isDestroyed() { return isDestroyed; }
 	
 	public int getMinimumRange() {
@@ -93,59 +80,45 @@ public class Unit extends cls.GameObject {
 		return hasMoved;
 	}
 	
-	protected Unit(String name, Player owner, int x, int y) {
-		super(name);
+	protected Unit(Player owner, int x, int y, DataUnit data) {
+		super(data.name);
 		this.owner = owner;
 		this.x = x;
 		this.y = y;
-		isInitialised = false;
-	}
-	
-	public void initialise(Kind unitKind, Movement movement, int moveDistance,
-			               int startFuel, int maxFuel, int fuelCost, boolean diesOnFuelDepletion,
-			               int vision, int defence, int influence, boolean canAttackAndMove, boolean canBuild,
-			               Weapon[] weapons, Sprite sprite, Sprite icon) {
-		if (isInitialised) return;
-		this.unitClass = unitKind;
-		this.movementType = movement;
-		this.moveDistance = moveDistance;
-		this.fuel = startFuel;
-		this.maxFuel = maxFuel;
-		this.fuelCost = fuelCost;
-		this.diesOnFuelDepletion = diesOnFuelDepletion;
-		this.visionDistance = vision;
-		this.defence = defence;
-		this.influence = influence;
-		this.canAttackAndMove = canAttackAndMove;
-		this.canBuild = canBuild;
-		this.weapons = weapons;
-		this.sprite = sprite;
-		this.icon = icon;
+		this.data = data;
+		// Create Weapon instances
+		weapons = new Weapon[data.weapons.length];
+		for (int i = 0; i < weapons.length; i ++) {
+			weapons [i] = data.weapons[i].newWeapon();
+		}
+		// Create graphics instances
+		sprite = data.sprite.newSprite();
+		icon = data.icon.newSprite();
 		
 		health = 100;
+		fuel = data.startingFuel;
 		isDestroyed = false;
 		isMoving = false;
-		
-		
-		isInitialised = true;
+		hasMoved = false;
+		isExhausted = false;
 	}
 	
 	@Override
 	public void refresh() {
-		fuel -= fuelCost;
+		fuel -= data.fuelCost;
 		isExhausted = false;
 		hasMoved = false;
 	}
 	
 	public void refuel() {
-		fuel = maxFuel;
+		fuel = data.maxFuel;
 	}
 
 	/**
 	 * Called on the depletion of fuel.
 	 */
 	public void depleteFuel() {
-		if (diesOnFuelDepletion) {
+		if (data.diesOnFuelDepletion) {
 			destroy();
 		}
 	}
@@ -279,7 +252,6 @@ public class Unit extends cls.GameObject {
 		if (isMoving) {
 			jog.Graphics.draw(sprite, animationX, animationY);
 		} else {
-			jog.Graphics.scale(-1, 1);
 			jog.Graphics.draw(sprite, x * Tile.TILE_SIZE, y * Tile.TILE_SIZE);
 		}
 	}
