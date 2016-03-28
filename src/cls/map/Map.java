@@ -2,6 +2,8 @@ package cls.map;
 
 import java.util.ArrayList;
 
+import run.Data;
+
 import cls.building.Building;
 
 public class Map {
@@ -30,7 +32,7 @@ public class Map {
 		tiles = new Tile[30][30]; // TODO implement map loading
 		for (int j = 0; j < tiles.length; j ++) {
 			for (int i = 0; i < tiles[j].length; i ++) {
-				tiles[j][i] = Tile.GRASS;
+				tiles[j][i] = Data.getTile("Grass").newTile();
 			}
 		}
 	}
@@ -38,7 +40,7 @@ public class Map {
 	public void draw() {
 		for (int j = 0; j < getHeight(); j ++) {
 			for (int i = 0; i < getWidth(); i ++) {
-				getTileAt(i, j).draw(i * Tile.TILE_SIZE, j * Tile.TILE_SIZE);
+				getTileAt(i, j).draw(i * DataTile.TILE_SIZE, j * DataTile.TILE_SIZE);
 			}
 		}
 	}
