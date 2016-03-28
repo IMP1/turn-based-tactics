@@ -15,7 +15,7 @@ public class Weapon {
 	public int getDamage() { return data.damage; }
 	public int getAmmo() { return ammo; }
 
-	public Weapon(DataWeapon data) {
+	protected Weapon(DataWeapon data) {
 		this.data = data;
 		this.ammo = data.startingAmmo;
 		this.icon = data.icon.newSprite();
