@@ -78,6 +78,7 @@ public class Battle extends Scene {
 		players[0].addUnit(Data.getUnit("Engineer").newUnit(players[0], 4, 3));
 		players[0].addUnit(Data.getUnit("Commando").newUnit(players[0], 2, 6));
 		players[0].addUnit(Data.getUnit("Tank").newUnit(players[0], 12, 6));
+		players[0].addUnit(Data.getUnit("Scout").newUnit(players[0], 12, 8));
 		players[0].addUnit(Data.getUnit("Helicopter").newUnit(players[0], 2, 10));
 		players[1].addUnit(Data.getUnit("Commando").newUnit(players[1], 8, 3));
 		players[0].updateVisibility();
@@ -289,7 +290,7 @@ public class Battle extends Scene {
 	private boolean[][] calculateUnitAttacks(Unit u) {
 		int min = u.getMinimumRange();
 		int max = u.getMaximumRange();
-		if (u.canAttackAndMove() && !u.hasMoved()) {
+		if (u.canMoveAndAttack() && !u.hasMoved()) {
 			min += u.getMoveDistance();
 			max += u.getMoveDistance();
 		}
