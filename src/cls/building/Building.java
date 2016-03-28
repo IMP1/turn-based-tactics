@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import lib.Sprite;
 
 import cls.Player;
+import cls.map.DataTile;
 import cls.map.Tile;
 import cls.unit.Unit;
 
@@ -23,10 +24,25 @@ public class Building extends cls.GameObject {
 	public int getTurnsToBuild()      { return data.turnsToBuild; }
 	public int getMoneyProvided()     { return data.moneyProvided; }
 	
-	public boolean canBeBuildOn(Tile tile) {
-		for (Tile t : data.buildingConditions) {
-			if (t == tile) return true;
+	/**
+	 * This tells you whether or not the building has had its prerequisites met.
+	 * These currently are whether the player has standing other buildings.
+	 * @param buildings the player's currently standing and owned buildings.
+	 * @return whether this building can be built.
+	 */
+	public boolean requirementsAreMet(Building[] buildings) {
+		for (DataBuilding requirement : data.buildingPrerequisistes) {
+			boolean isMet = false;
+			for (Building b : buildings) {
+				if (b.data == requirement) isMet = true;
+			}
+			if (!isMet) return false;
 		}
+		return true;
+	}
+	
+	public boolean canBeBuildOn(Tile tile) {
+		
 		return false;
 	}
 	
@@ -56,7 +72,7 @@ public class Building extends cls.GameObject {
 	public Player getOwner()          { return owner; }
 	public int getTurnsUntilCapture() { return turnsLeftForCapture; }
 	
-	public Building(Player owner, int x, int y, DataBuilding data) {
+	protected Building(Player owner, int x, int y, DataBuilding data) {
 		super(data.name);
 		this.owner = owner;
 		this.x = x;
@@ -94,7 +110,7 @@ public class Building extends cls.GameObject {
 	@Override
 	public void draw() {
 		// TODO draw with bottom middle as the origin
-		jog.Graphics.draw(sprite, x * Tile.TILE_SIZE, y * Tile.TILE_SIZE);
+		jog.Graphics.draw(sprite, x * DataTile.TILE_SIZE, y * DataTile.TILE_SIZE);
 	}
 	
 }

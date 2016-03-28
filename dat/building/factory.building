@@ -1,0 +1,10 @@
+Factory
+GRASS
+
+4 100
+2 3
+0 INFANTRY VEHICLE
+INFANTRY 10 VEHICLE 10
+0
+gfx/building/factory.png 2 2 0.2
+Engineer Tank
