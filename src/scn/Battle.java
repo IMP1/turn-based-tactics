@@ -10,6 +10,7 @@ import lib.Animation;
 import lib.Camera;
 import cls.Player;
 import cls.building.Building;
+import cls.map.DataTile;
 import cls.map.Map;
 import cls.map.Tile;
 import cls.unit.Unit;
@@ -89,10 +90,10 @@ public class Battle extends Scene {
 		selectedUnit = null;
 		movingUnit = null;
 		selectedBuilding = null;
-		camera = new Camera(0, 0, map.getWidth() * Tile.TILE_SIZE, map.getHeight() * Tile.TILE_SIZE);
+		camera = new Camera(0, 0, map.getWidth() * DataTile.TILE_SIZE, map.getHeight() * DataTile.TILE_SIZE);
 		if (fogOfWar) {
-			int w = map.getWidth() * Tile.TILE_SIZE;
-			int h = map.getHeight() * Tile.TILE_SIZE;
+			int w = map.getWidth() * DataTile.TILE_SIZE;
+			int h = map.getHeight() * DataTile.TILE_SIZE;
 			fogCanvas = jog.Graphics.newCanvas(w, h);
 			objectCanvas = jog.Graphics.newCanvas(w, h);
 		}
@@ -131,12 +132,12 @@ public class Battle extends Scene {
 
 	// TODO: move to Map class
 	private int tileX(double worldX) {
-		return (int)(worldX / Tile.TILE_SIZE);
+		return (int)(worldX / DataTile.TILE_SIZE);
 	}
 	
 	// TODO: move to map class
 	private int tileY(double worldY) {
-		return (int)(worldY / Tile.TILE_SIZE);
+		return (int)(worldY / DataTile.TILE_SIZE);
 	}
 	
 	@Override
@@ -408,9 +409,9 @@ public class Battle extends Scene {
 		for (int j = 0; j < visible.length; j ++) {
 			for (int i = 0; i < visible[j].length; i ++) {
 				if (visible[j][i]) {
-					fogCanvas.clear(i * Tile.TILE_SIZE, j * Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE);
+					fogCanvas.clear(i * DataTile.TILE_SIZE, j * DataTile.TILE_SIZE, DataTile.TILE_SIZE, DataTile.TILE_SIZE);
 				} else {
-					objectCanvas.clear(i * Tile.TILE_SIZE, j * Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE);
+					objectCanvas.clear(i * DataTile.TILE_SIZE, j * DataTile.TILE_SIZE, DataTile.TILE_SIZE, DataTile.TILE_SIZE);
 				}
 			}
 		}
@@ -486,7 +487,7 @@ public class Battle extends Scene {
 			for (int i = 0; i < moves[j].length; i ++) {
 				if (moves[j][i]) {
 					jog.Graphics.setColour(0, 128, 255, opacity);
-					jog.Graphics.rectangle(true, i * Tile.TILE_SIZE, j * Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE);
+					jog.Graphics.rectangle(true, i * DataTile.TILE_SIZE, j * DataTile.TILE_SIZE, DataTile.TILE_SIZE, DataTile.TILE_SIZE);
 				}
 			}
 		}
@@ -494,7 +495,7 @@ public class Battle extends Scene {
 			for (int i = 0; i < attacks[j].length; i ++) {
 				if (attacks[j][i]) {
 					jog.Graphics.setColour(255, 64, 64, opacity);
-					jog.Graphics.rectangle(true, i * Tile.TILE_SIZE, j * Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE);
+					jog.Graphics.rectangle(true, i * DataTile.TILE_SIZE, j * DataTile.TILE_SIZE, DataTile.TILE_SIZE, DataTile.TILE_SIZE);
 				}
 			}
 		}
@@ -503,12 +504,12 @@ public class Battle extends Scene {
 	private void drawSelectedUnitPath() {
 		if (selectedUnitPath.length < 2) return;
 		jog.Graphics.setColour(255, 255, 255);
-		jog.Graphics.setLineWidth(Tile.TILE_SIZE / 2);
+		jog.Graphics.setLineWidth(DataTile.TILE_SIZE / 2);
 		for (int n = 0; n < selectedUnitPath.length - 2; n += 2) {
-			int x1 = (int)((selectedUnitPath[n] + 0.5) * Tile.TILE_SIZE); 
-			int y1 = (int)((selectedUnitPath[n+1] + 0.5) * Tile.TILE_SIZE);
-			int x2 = (int)((selectedUnitPath[n+2] + 0.5) * Tile.TILE_SIZE); 
-			int y2 = (int)((selectedUnitPath[n+3] + 0.5) * Tile.TILE_SIZE);
+			int x1 = (int)((selectedUnitPath[n] + 0.5) * DataTile.TILE_SIZE); 
+			int y1 = (int)((selectedUnitPath[n+1] + 0.5) * DataTile.TILE_SIZE);
+			int x2 = (int)((selectedUnitPath[n+2] + 0.5) * DataTile.TILE_SIZE); 
+			int y2 = (int)((selectedUnitPath[n+3] + 0.5) * DataTile.TILE_SIZE);
 			jog.Graphics.line(x1, y1, x2, y2);
 		}
 		jog.Graphics.setLineWidth(1);
