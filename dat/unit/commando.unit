@@ -1,8 +1,11 @@
 Commando
 INFANTRY
 FOOT 3
-100 100 1 FALSE
+2 10
+100 100 1 TRUE FALSE
 3 1 1 TRUE FALSE
 gfx/unit/commando.png 5 4 0.2
 gfx/unit/commando.png 5 4 0.2
 Rifle
+0
+

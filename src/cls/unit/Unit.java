@@ -2,12 +2,12 @@ package cls.unit;
 
 import lib.Sprite;
 import cls.Player;
-import cls.map.Tile;
+import cls.map.DataTile;
 import cls.weapon.Weapon;
 
 public class Unit extends cls.GameObject {
 
-	private static final int MOVE_SPEED = Tile.TILE_SIZE * 2; 
+	private static final int MOVE_SPEED = DataTile.TILE_SIZE * 2; 
 	
 	public enum Kind {
 		INFANTRY,
@@ -156,11 +156,11 @@ public class Unit extends cls.GameObject {
 		double dy = Math.signum(targetY - currentY);
 		animationX += dx * dt * MOVE_SPEED;
 		animationY += dy * dt * MOVE_SPEED;
-		if ((dx < 0 && animationX < targetX * Tile.TILE_SIZE) || (dx > 0 && animationX > targetX * Tile.TILE_SIZE)) {
+		if ((dx < 0 && animationX < targetX * DataTile.TILE_SIZE) || (dx > 0 && animationX > targetX * DataTile.TILE_SIZE)) {
 			nextPathPoint();
 			return;
 		}
-		if ((dy < 0 && animationY < targetY * Tile.TILE_SIZE) || (dy > 0 && animationY > targetY * Tile.TILE_SIZE)) {
+		if ((dy < 0 && animationY < targetY * DataTile.TILE_SIZE) || (dy > 0 && animationY > targetY * DataTile.TILE_SIZE)) {
 			nextPathPoint();
 			return;
 		}
@@ -191,8 +191,8 @@ public class Unit extends cls.GameObject {
 		if (targetY < currentY) {
 			sprite.setPose(4);
 		}
-		animationX = currentX * Tile.TILE_SIZE;
-		animationY = currentY * Tile.TILE_SIZE;
+		animationX = currentX * DataTile.TILE_SIZE;
+		animationY = currentY * DataTile.TILE_SIZE;
 	}
 	
 	public void move(int[] path) {
@@ -252,7 +252,7 @@ public class Unit extends cls.GameObject {
 		if (isMoving) {
 			jog.Graphics.draw(sprite, animationX, animationY);
 		} else {
-			jog.Graphics.draw(sprite, x * Tile.TILE_SIZE, y * Tile.TILE_SIZE);
+			jog.Graphics.draw(sprite, x * DataTile.TILE_SIZE, y * DataTile.TILE_SIZE);
 		}
 	}
 	
