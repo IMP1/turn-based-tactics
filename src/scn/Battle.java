@@ -11,6 +11,7 @@ import lib.Camera;
 import cls.Player;
 import cls.building.Building;
 import cls.map.DataTile;
+import cls.map.Level;
 import cls.map.Map;
 import cls.map.Tile;
 import cls.unit.Unit;
@@ -53,6 +54,7 @@ public class Battle extends Scene {
 	private Building hoveredBuilding;
 	
 	private Tile hoveredTile;
+	private Level level;
 	private Map map;
 	private Camera camera;
 	
@@ -71,7 +73,8 @@ public class Battle extends Scene {
 	
 	@Override
 	public void start() {
-		map = new Map("map_1.map");
+		level = Data.getLevel("Debug").newLevel();
+		map = level.getMap();
 		for (int i = 0; i < players.length; i ++) {
 			players[i] = new Player(map.getWidth(), map.getHeight());
 		}
@@ -119,7 +122,7 @@ public class Battle extends Scene {
 	}
 	
 	private Building getBuildingAt(int i, int j) {
-		return map.getBuildingAt(i, j);
+		return level.getBuildingAt(i, j);
 	}
 	
 	private Unit getUnitAt(int i, int j) {
@@ -178,6 +181,21 @@ public class Battle extends Scene {
 				playingMovementAnimation = false;
 			}
 		}
+		double dx = 0, dy = 0;
+		final int CAMERA_SCROLL_SPEED = 512;
+		if (jog.Input.isKeyDown(KeyEvent.VK_UP)) {
+			dy -= dt * CAMERA_SCROLL_SPEED;
+		}
+		if (jog.Input.isKeyDown(KeyEvent.VK_LEFT)) {
+			dx -= dt * CAMERA_SCROLL_SPEED;
+				}
+		if (jog.Input.isKeyDown(KeyEvent.VK_DOWN)) {
+			dy += dt * CAMERA_SCROLL_SPEED;
+		}
+		if (jog.Input.isKeyDown(KeyEvent.VK_RIGHT)) {
+			dx += dt * CAMERA_SCROLL_SPEED;
+		}
+		camera.move(dx, dy);
 	}
 	
 	@Override
