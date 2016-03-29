@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import cls.building.DataBuilding;
+import cls.map.DataLevel;
+import cls.map.DataMap;
 import cls.map.DataTile;
 import cls.unit.DataUnit;
 import cls.unit.DataSprite;
@@ -27,6 +29,8 @@ public final class Data {
 	private static DataBuilding[] buildings = new DataBuilding[0];
 	private static DataUnit[] units = new DataUnit[0];
 	private static DataWeapon[] weapons = new DataWeapon[0];
+	private static DataMap[] maps = new DataMap[0];
+	private static DataLevel[] levels = new DataLevel[0];
 
 	public static DataTile getTile(String name) {
 		for (DataTile t : tiles) {
@@ -49,6 +53,7 @@ public final class Data {
 			if (u.name.equals(name)) return u;
 		}
 		System.out.printf("[Data] No unit with the name '%s'.\n", name);
+		new Exception().printStackTrace();
 		return null;
 	}
 	
@@ -60,11 +65,29 @@ public final class Data {
 		return null;
 	}
 	
+	public static DataMap getMap(String name) {
+		for (DataMap m : maps) {
+			if (m.name.equals(name)) return m;
+		}
+		System.out.printf("[Data] No map with the name '%s'.\n", name);
+		return null;
+	}
+	
+	public static DataLevel getLevel(String name) {
+		for (DataLevel l : levels) {
+			if (l.name.equals(name)) return l;
+		}
+		System.out.printf("[Data] No level with the name '%s'.\n", name);
+		return null;
+	}
+	
 	public static void load() {
 		loadTiles();
 		loadBuildings();
 		loadWeapons();
 		loadUnits();
+		loadMaps();
+		loadLevels();
 	}
 	
 	private static void loadTiles() {
@@ -84,7 +107,7 @@ public final class Data {
 	
 	private static void loadBuildings() {
 		ArrayList<DataBuilding> dataBuildings = new ArrayList<DataBuilding>();
-		for (String filename : jog.Filesystem.enumerate("dat/tile")) {
+		for (String filename : jog.Filesystem.enumerate("dat/building")) {
 			try {
 				DataBuilding t = readBuilding("dat/building/" + filename);
 				dataBuildings.add(t);
@@ -125,6 +148,36 @@ public final class Data {
 			}
 		}
 		units = dataActors.toArray(units);
+	}
+	
+	private static void loadMaps() {
+		ArrayList<DataMap> dataMaps = new ArrayList<DataMap>();
+		for (String filename : jog.Filesystem.enumerate("dat/map")) {
+			try {
+				DataMap m = readMap("dat/map/" + filename);
+				dataMaps.add(m);
+				System.out.println("[Data] Loaded " + filename);
+			} catch (Exception e) {
+				System.err.printf("Could not read map '%s'.\n", filename);
+				e.printStackTrace();
+			}
+		}
+		maps = dataMaps.toArray(maps);
+	}
+	
+	private static void loadLevels() {
+		ArrayList<DataLevel> dataLevels = new ArrayList<DataLevel>();
+		for (String filename : jog.Filesystem.enumerate("dat/level")) {
+			try {
+				DataLevel l = readLevel("dat/level/" + filename);
+				dataLevels.add(l);
+				System.out.println("[Data] Loaded " + filename);
+			} catch (Exception e) {
+				System.err.printf("Could not read level '%s'.\n", filename);
+				e.printStackTrace();
+			}
+		}
+		levels = dataLevels.toArray(levels);
 	}
 	
 	private static DataTile readTile(String filename) {
@@ -189,18 +242,18 @@ public final class Data {
 		
 		String[] healingData = buildingData[6].split(" ");
 		HashMap<Unit.Kind, Integer> healthRestoration = new HashMap<Unit.Kind, Integer>();
-		for (int i = 0; i < healingData.length; i ++) {
-			Unit.Kind unit = Unit.Kind.valueOf(healingData[i*2]);
-			int healing = Integer.valueOf(healingData[i*2+1]);
+		for (int i = 0; i < healingData.length - 1; i += 2) {
+			Unit.Kind unit = Unit.Kind.valueOf(healingData[i]);
+			int healing = Integer.valueOf(healingData[i+1]);
 			healthRestoration.put(unit, healing);
 		}
 		
 		String[] storageData = buildingData[7].split(" ");
 		int totalSpace = Integer.valueOf(storageData[0]);
 		HashMap<Unit.Kind, Integer> unitStorage = new HashMap<Unit.Kind, Integer>();
-		for (int i = 1; i < storageData.length; i += 2) {
-			Unit.Kind unit = Unit.Kind.valueOf(storageData[i*2 - 1]);
-			int size = Integer.valueOf(storageData[i*2]);
+		for (int i = 1; i < storageData.length - 1; i += 2) {
+			Unit.Kind unit = Unit.Kind.valueOf(storageData[i]);
+			int size = Integer.valueOf(storageData[i + 1]);
 			unitStorage.put(unit, size);
 		}
 		
@@ -316,9 +369,9 @@ public final class Data {
 		String storageData[] = unitData[9].split(" ");
 		int totalStorage = Integer.valueOf(storageData[0]);
 		HashMap<Unit.Kind, Integer> unitStorageSizes = new HashMap<Unit.Kind, Integer>();
-		for (int i = 1; i < storageData.length; i += 2) {
-			Unit.Kind unit = Unit.Kind.valueOf(storageData[i*2 - 1]);
-			int size = Integer.valueOf(storageData[i*2]);
+		for (int i = 1; i < storageData.length - 1; i += 2) {
+			Unit.Kind unit = Unit.Kind.valueOf(storageData[i]);
+			int size = Integer.valueOf(storageData[i + 1]);
 			unitStorageSizes.put(unit, size);
 		}
 		
@@ -333,6 +386,86 @@ public final class Data {
 						    vision, defence, influence, canMoveAndAttack, canBuild, 
 						    sprite, icon, weaponNames,
 						    totalStorage, unitStorageSizes, buildingNames);
+	}
+	
+	private static DataMap readMap(String filename) {
+		String[] mapData = jog.Filesystem.readFile(filename).split("\n");
+		String name = mapData[0];
+		
+		String[] keyData = mapData[1].split(" "); 
+		HashMap<Character, DataTile> key = new HashMap<Character, DataTile>();
+		for (int i = 0; i < keyData.length - 1; i += 2) {
+			char character = Character.valueOf(keyData[i].charAt(0));
+			DataTile tile = Data.getTile(keyData[i+1]);
+			System.out.printf("'%c' is %s.\n", character, tile.toString());
+			key.put(character, tile);
+		}
+		
+		DataTile[][] tiles = new DataTile[mapData.length - 2][];
+		for (int j = 0; j < tiles.length; j ++) {
+			char[] mapRow = mapData[j+2].toCharArray();
+			System.out.println("ROW: " + java.util.Arrays.toString(mapRow));
+			tiles[j] = new DataTile[mapRow.length];
+			for (int i = 0; i < tiles[j].length; i ++) {
+				tiles[j][i] = key.get(mapRow[i]);
+			}
+		}
+		
+		for (DataTile[] row : tiles)
+			System.out.println(java.util.Arrays.toString(row));
+		
+		return new DataMap(name, tiles);
+	}
+	
+	private static DataLevel readLevel(String filename) {
+		String[] levelData = jog.Filesystem.readFile(filename).split("\n");
+		String name = levelData[0];
+		
+		String[] mapData = levelData[1].split(" ");
+		DataMap dataMap = Data.getMap(mapData[0]);
+		int playerCount = Integer.valueOf(mapData[1]);
+		
+		String[][] startingUnits;
+		int[][][] unitStartingPositions;
+		if (levelData.length > 2) {
+			startingUnits = new String[playerCount][];
+			unitStartingPositions = new int[playerCount][][];
+			for (int n = 0; n < playerCount; n ++) {
+				String[] unitData = levelData[2 + n].split(" ");
+				startingUnits[n] = new String[unitData.length];
+				unitStartingPositions[n] = new int[unitData.length][2];
+				for (int i = 0; i < unitData.length - 2; i += 3) {
+					startingUnits[n][i / 3] = unitData[i];
+					unitStartingPositions[n][i / 3][0] = Integer.valueOf(unitData[i+1]);
+					unitStartingPositions[n][i / 3][1] = Integer.valueOf(unitData[i+2]);
+				}
+			}
+		} else {
+			startingUnits = new String[0][0];
+			unitStartingPositions = new int[0][0][0];
+		}
+		
+		String[][] startingBuildings;
+		int[][][] buildingStartingPositions;
+		if (levelData.length > 2 + playerCount) {
+			startingBuildings = new String[playerCount][];
+			buildingStartingPositions = new int[playerCount][][];
+			for (int n = 0; n < playerCount; n ++) {
+				String[] buildingData = levelData[2 + playerCount + n].split(" ");
+				startingBuildings[n] = new String[buildingData.length];
+				buildingStartingPositions[n] = new int[buildingData.length][2];
+				for (int i = 0; i < buildingData.length - 2; i += 3) {
+					startingBuildings[n][i] = buildingData[i];
+					buildingStartingPositions[n][i][0] = Integer.valueOf(buildingData[i+1]);
+					buildingStartingPositions[n][i][1] = Integer.valueOf(buildingData[i+2]);
+				}
+			}
+		} else {
+			startingBuildings = new String[0][0];
+			buildingStartingPositions = new int[0][0][0];
+		}
+		
+		return new DataLevel(name, dataMap, playerCount, startingUnits, unitStartingPositions, startingBuildings, buildingStartingPositions);
 	}
 
 }
