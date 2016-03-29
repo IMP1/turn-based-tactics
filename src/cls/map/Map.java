@@ -1,22 +1,9 @@
 package cls.map;
 
-import java.util.ArrayList;
-
-import run.Data;
-
-import cls.building.Building;
-
 public class Map {
 
-	protected ArrayList<Building> buildings;
-	protected Tile[][] tiles;
-
-	public Building getBuildingAt(int i, int j) {
-		for (Building b : buildings) {
-			if (b.isAt(i, j)) return b;
-		}
-		return null;
-	}
+	private DataMap data;
+	private Tile[][] tiles;
 	
 	public Tile getTileAt(int i, int j) {
 		if (j < 0 || j >= tiles.length) return null;
@@ -27,22 +14,23 @@ public class Map {
 	public int getWidth() { return tiles[0].length; }
 	public int getHeight() { return tiles.length; }
 	
-	public Map(String filename) {
-		buildings = new ArrayList<Building>();
-		tiles = new Tile[30][30]; // TODO implement map loading
+	public Map(DataMap data) {
+		this.data = data;
+		tiles = new Tile[data.tiles.length][];
 		for (int j = 0; j < tiles.length; j ++) {
+			tiles[j] = new Tile[data.tiles[j].length];
 			for (int i = 0; i < tiles[j].length; i ++) {
-				tiles[j][i] = Data.getTile("Grass").newTile();
+				tiles[j][i] = data.tiles[j][i].newTile();
 			}
 		}
 	}
-
+	
 	public void draw() {
 		for (int j = 0; j < getHeight(); j ++) {
 			for (int i = 0; i < getWidth(); i ++) {
 				getTileAt(i, j).draw(i * DataTile.TILE_SIZE, j * DataTile.TILE_SIZE);
 			}
 		}
-	}
-	
+	}	
+
 }
