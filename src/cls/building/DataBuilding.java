@@ -13,7 +13,7 @@ import cls.unit.Unit;
 public class DataBuilding {
 
 	public final String                      name;
-	public final DataTile[]                      buildingConditions;
+	public final DataTile[]                  buildingConditions;
 		private String[] validTileNames;
 	public final DataBuilding[]              buildingPrerequisistes;
 		private String[] requiredBuildingNames;
@@ -33,7 +33,8 @@ public class DataBuilding {
 	
 	private boolean finalised;
 	
-	public DataBuilding(String name, String[] validTileNames, String[] requiredBuildingNames, 
+	public DataBuilding(String name,
+			            String[] validTileNames, String[] requiredBuildingNames, 
 						int turnsToBuild, int costToBuild,
 						int influenceToCapture, int turnsToCapture,
 						int moneyProvided, Unit.Kind[] resupplies,
