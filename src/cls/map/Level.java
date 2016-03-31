@@ -17,7 +17,10 @@ public class Level {
 	private Map map;
 	
 	public Building getBuildingAt(int i, int j) {
-		return null; // TODO do
+		for (Building b : buildings) {
+			if (b.getX() == i && b.getY() == j) return b;
+		}
+		return null;
 	}
 	
 	public Map getMap() {
@@ -115,33 +118,37 @@ public class Level {
 		return tiles;
 	}
 	
-	private void addAvailableMovement(Unit u, int x, int y, int distanceRemaining, boolean[][] moveable) {
+	private void addAvailableMovement(Unit unit, int x, int y, int distanceRemaining, boolean[][] moveable) {
 		if (distanceRemaining == 0) return;
 		if (map.getTileAt(x, y) == null) return;
-		setMoveableTo(x, y, moveable);
+		Building b = getBuildingAt(x, y); 
+		if (b != null && b.getOwner() != unit.getOwner()) return;
+		Unit u = getUnitAt(x, y);
+		if (u != null && u.getOwner() != unit.getOwner()) return;
 		
+		setMoveableTo(x, y, moveable);
 		if (map.getTileAt(x, y - 1) != null) {
-			int costUp = map.getTileAt(x, y - 1).getMovementCost(u); 
+			int costUp = map.getTileAt(x, y - 1).getMovementCost(unit); 
 			if (costUp <= distanceRemaining) {
-				addAvailableMovement(u, x, y - 1, distanceRemaining - costUp, moveable);
+				addAvailableMovement(unit, x, y - 1, distanceRemaining - costUp, moveable);
 			}
 		}
 		if (map.getTileAt(x - 1, y) != null) {
-			int costLeft = map.getTileAt(x - 1, y).getMovementCost(u);  
+			int costLeft = map.getTileAt(x - 1, y).getMovementCost(unit);  
 			if (costLeft <= distanceRemaining) {
-				addAvailableMovement(u, x - 1, y, distanceRemaining - costLeft, moveable);
+				addAvailableMovement(unit, x - 1, y, distanceRemaining - costLeft, moveable);
 			}
 		}
 		if (map.getTileAt(x, y + 1) != null) {
-			int costDown = map.getTileAt(x, y + 1).getMovementCost(u); 
+			int costDown = map.getTileAt(x, y + 1).getMovementCost(unit); 
 			if (costDown <= distanceRemaining) {
-				addAvailableMovement(u, x, y + 1, distanceRemaining - costDown, moveable);
+				addAvailableMovement(unit, x, y + 1, distanceRemaining - costDown, moveable);
 			}
 		}
 		if (map.getTileAt(x + 1, y) != null) {
-			int costRight = map.getTileAt(x + 1, y).getMovementCost(u); 
+			int costRight = map.getTileAt(x + 1, y).getMovementCost(unit); 
 			if (costRight <= distanceRemaining) {
-				addAvailableMovement(u, x + 1, y, distanceRemaining - costRight, moveable);
+				addAvailableMovement(unit, x + 1, y, distanceRemaining - costRight, moveable);
 			}
 		}
 	}
