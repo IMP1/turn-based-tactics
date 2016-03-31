@@ -11,6 +11,14 @@ public class Map {
 		return tiles[j][i];
 	}
 
+	public int tileX(double worldX) {
+		return (int)(worldX / DataTile.TILE_SIZE);
+	}
+
+	public int tileY(double worldY) {
+		return (int)(worldY / DataTile.TILE_SIZE);
+	}
+	
 	public int getWidth() { return tiles[0].length; }
 	public int getHeight() { return tiles.length; }
 	
