@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import cls.Player.Faction;
 import cls.building.DataBuilding;
 import cls.map.DataLevel;
 import cls.map.DataMap;
@@ -397,22 +398,17 @@ public final class Data {
 		for (int i = 0; i < keyData.length - 1; i += 2) {
 			char character = Character.valueOf(keyData[i].charAt(0));
 			DataTile tile = Data.getTile(keyData[i+1]);
-			System.out.printf("'%c' is %s.\n", character, tile.toString());
 			key.put(character, tile);
 		}
 		
 		DataTile[][] tiles = new DataTile[mapData.length - 2][];
 		for (int j = 0; j < tiles.length; j ++) {
 			char[] mapRow = mapData[j+2].toCharArray();
-			System.out.println("ROW: " + java.util.Arrays.toString(mapRow));
 			tiles[j] = new DataTile[mapRow.length];
 			for (int i = 0; i < tiles[j].length; i ++) {
 				tiles[j][i] = key.get(mapRow[i]);
 			}
 		}
-		
-		for (DataTile[] row : tiles)
-			System.out.println(java.util.Arrays.toString(row));
 		
 		return new DataMap(name, tiles);
 	}
@@ -423,49 +419,57 @@ public final class Data {
 		
 		String[] mapData = levelData[1].split(" ");
 		DataMap dataMap = Data.getMap(mapData[0]);
-		int playerCount = Integer.valueOf(mapData[1]);
+		boolean fogOfWar = Boolean.valueOf(mapData[1]);
+		
+		String[] playerData = levelData[2].split(" ");
+		int playerCount = Integer.valueOf(playerData[0]);
+		Faction[] factions = new Faction[playerData.length - 1];
+		for (int i = 1; i < playerData.length; i ++) {
+			factions[i-1] = Faction.valueOf(playerData[i]);
+		}
 		
 		String[][] startingUnits;
 		int[][][] unitStartingPositions;
-		if (levelData.length > 2) {
+		if (levelData.length > 3) {
 			startingUnits = new String[playerCount][];
 			unitStartingPositions = new int[playerCount][][];
 			for (int n = 0; n < playerCount; n ++) {
-				String[] unitData = levelData[2 + n].split(" ");
-				startingUnits[n] = new String[unitData.length];
-				unitStartingPositions[n] = new int[unitData.length][2];
+				String[] unitData = levelData[3 + n].split(" ");
+				startingUnits[n] = new String[unitData.length / 3];
+				unitStartingPositions[n] = new int[unitData.length / 3][2];
 				for (int i = 0; i < unitData.length - 2; i += 3) {
 					startingUnits[n][i / 3] = unitData[i];
 					unitStartingPositions[n][i / 3][0] = Integer.valueOf(unitData[i+1]);
 					unitStartingPositions[n][i / 3][1] = Integer.valueOf(unitData[i+2]);
 				}
+				System.out.printf("Player %d has %d units.\n", n, startingUnits[n].length);
 			}
 		} else {
 			startingUnits = new String[0][0];
 			unitStartingPositions = new int[0][0][0];
 		}
 		
-		String[][] startingBuildings;
-		int[][][] buildingStartingPositions;
-		if (levelData.length > 2 + playerCount) {
-			startingBuildings = new String[playerCount][];
-			buildingStartingPositions = new int[playerCount][][];
-			for (int n = 0; n < playerCount; n ++) {
-				String[] buildingData = levelData[2 + playerCount + n].split(" ");
-				startingBuildings[n] = new String[buildingData.length];
-				buildingStartingPositions[n] = new int[buildingData.length][2];
-				for (int i = 0; i < buildingData.length - 2; i += 3) {
-					startingBuildings[n][i] = buildingData[i];
-					buildingStartingPositions[n][i][0] = Integer.valueOf(buildingData[i+1]);
-					buildingStartingPositions[n][i][1] = Integer.valueOf(buildingData[i+2]);
-				}
+		String[] startingBuildings;
+		int[][] buildingStartingPositions;
+		int[] buildingStartingOwners; 
+		if (levelData.length > 3 + playerCount) {
+			String[] buildingData = levelData[3 + playerCount].split(" ");
+			startingBuildings = new String[buildingData.length];
+			buildingStartingPositions = new int[buildingData.length][2];
+			buildingStartingOwners = new int[buildingData.length];
+			for (int i = 0; i < buildingData.length - 3; i += 4) {
+				startingBuildings[i] = buildingData[i];
+				buildingStartingOwners[i] = Integer.valueOf(buildingData[i+1]);
+				buildingStartingPositions[i][0] = Integer.valueOf(buildingData[i+2]);
+				buildingStartingPositions[i][1] = Integer.valueOf(buildingData[i+3]);
 			}
 		} else {
-			startingBuildings = new String[0][0];
-			buildingStartingPositions = new int[0][0][0];
+			startingBuildings = new String[0];
+			buildingStartingPositions = new int[0][0];
+			buildingStartingOwners = new int[0];
 		}
 		
-		return new DataLevel(name, dataMap, playerCount, startingUnits, unitStartingPositions, startingBuildings, buildingStartingPositions);
+		return new DataLevel(name, dataMap, fogOfWar, playerCount, factions, startingUnits, unitStartingPositions, startingBuildings, buildingStartingPositions, buildingStartingOwners);
 	}
 
 }
