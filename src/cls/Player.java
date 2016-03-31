@@ -2,10 +2,18 @@ package cls;
 
 import java.util.ArrayList;
 
+import cls.map.Map;
 import cls.unit.Unit;
 
 public class Player {
+	
+	public enum Faction {
+		BLUE_SKY_CORPS,
+		DELTA_CONFEDERATION,
+		NIGHT_WALKERS,
+	}
 
+	public final Faction faction;
 	private ArrayList<Unit> units;
 	private boolean[][] visibility;
 	private boolean finishedTurn;
@@ -16,11 +24,12 @@ public class Player {
 	
 	public boolean[][] getVisibleTiles() { return visibility; }
 	
-	public Player(int mapWidth, int mapHeight) {
+	public Player(Faction faction, Map map) {
+		this.faction = faction;
 		units = new ArrayList<Unit>();
 		finishedTurn = true;
-		visibility = new boolean[mapHeight][mapWidth];
-		updateVisibility();
+		visibility = new boolean[map.getHeight()][map.getWidth()];
+		updateVisibility(map);
 	}
 	
 	public void beginTurn() {
@@ -53,23 +62,49 @@ public class Player {
 		}
 	}
 	
-	public void updateVisibility() {
+	public void updateVisibility(Map map) {
 		int mapHeight = visibility.length;
 		int mapWidth = visibility[0].length;
 		visibility = new boolean[mapWidth][mapHeight];
 		for (Unit u : units) {
-			int dist = u.getVisionDistance();
-			int x1 = u.getX() - dist;
-			int x2 = u.getX() + dist;
-			for (int i = x1; i <= x2; i ++) {
-				int d = dist - Math.abs(i - u.getX());
-				int y1 = u.getY() - d;
-				int y2 = u.getY() + d;
-				for (int j = y1; j <= y2; j ++) {
-					setVisible(i, j, visibility);
-				}
+			setVisible(u.getX(), u.getY(), visibility);
+			updateUnitVisibility(map, u.getX(), u.getY() - 1, u.getVisionDistance());
+			updateUnitVisibility(map, u.getX() - 1, u.getY(), u.getVisionDistance());
+			updateUnitVisibility(map, u.getX(), u.getY() + 1, u.getVisionDistance());
+			updateUnitVisibility(map, u.getX() + 1, u.getY(), u.getVisionDistance());
+		}
+	}
+	
+	private void updateUnitVisibility(Map map, int x, int y, int distanceRemaining) {
+		if (distanceRemaining == 0) return;
+		if (map.getTileAt(x, y) == null) return;
+		setVisible(x, y, visibility);
+		
+		if (map.getTileAt(x, y - 1) != null) {
+			int costUp = map.getTileAt(x, y - 1).getVisionCost(); 
+			if (costUp <= distanceRemaining) {
+				updateUnitVisibility(map, x, y - 1, distanceRemaining - costUp);
 			}
 		}
+		if (map.getTileAt(x - 1, y) != null) {
+			int costLeft = map.getTileAt(x - 1, y).getVisionCost(); 
+			if (costLeft <= distanceRemaining) {
+				updateUnitVisibility(map, x - 1, y, distanceRemaining - costLeft);
+			}
+		}
+		if (map.getTileAt(x, y + 1) != null) {
+			int costDown = map.getTileAt(x, y + 1).getVisionCost(); 
+			if (costDown <= distanceRemaining) {
+				updateUnitVisibility(map, x, y + 1, distanceRemaining - costDown);
+			}
+		}
+		if (map.getTileAt(x + 1, y) != null) {
+			int costRight = map.getTileAt(x + 1, y).getVisionCost(); 
+			if (costRight <= distanceRemaining) {
+				updateUnitVisibility(map, x + 1, y, distanceRemaining - costRight);
+			}
+		}
+		
 	}
 	
 	private void setVisible(int i, int j, boolean[][] map) {
@@ -79,7 +114,6 @@ public class Player {
 	}
 
 	public void addUnit(Unit newUnit) {
-		System.out.println("Adding new unit " + newUnit);
 		units.add(newUnit);
 	}
 	
