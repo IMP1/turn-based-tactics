@@ -104,32 +104,56 @@ public class Level {
 	
 	public boolean[][] calculateUnitMoves(Unit u) {
 		if (!u.canMove()) return new boolean[0][0];
-		int min = 0;
 		int max = u.getMoveDistance();
-		return getAllTilesWithinMovementRange(u.getX(), u.getY(), min, max);
-	}
-	
-	private boolean[][] getAllTilesWithinMovementRange(int x, int y, int minDistance, int maxDistance) {
-		// TODO make it take terrain into account
 		boolean [][] tiles = new boolean[map.getHeight()][map.getWidth()];
-		for (int j = 0; j < tiles.length; j ++) {
-			for (int i = 0; i < tiles[j].length; i ++) {
-				int d = Math.abs(i - x) + Math.abs(j - y);
-				if (d >= minDistance && d <= maxDistance) tiles[j][i] = true;
-			}
-		}
+		
+		addAvailableMovement(u, u.getX(), u.getY() - 1, max, tiles);
+		addAvailableMovement(u, u.getX() - 1, u.getY(), max, tiles);
+		addAvailableMovement(u, u.getX(), u.getY() + 1, max, tiles);
+		addAvailableMovement(u, u.getX() + 1, u.getY(), max, tiles);
+		
 		return tiles;
 	}
 	
-	public boolean[][] calculateUnitAttacks(Unit u) {
-		int min = u.getMinimumRange();
-		int max = u.getMaximumRange();
-		if (u.canMoveAndAttack() && u.canMove()) {
-			min += u.getMoveDistance();
-			max += u.getMoveDistance();
+	private void addAvailableMovement(Unit u, int x, int y, int distanceRemaining, boolean[][] moveable) {
+		if (distanceRemaining == 0) return;
+		if (map.getTileAt(x, y) == null) return;
+		setMoveableTo(x, y, moveable);
+		
+		if (map.getTileAt(x, y - 1) != null) {
+			int costUp = map.getTileAt(x, y - 1).getMovementCost(u); 
+			if (costUp <= distanceRemaining) {
+				addAvailableMovement(u, x, y - 1, distanceRemaining - costUp, moveable);
+			}
 		}
-		// TODO write proper attack range method that take unit's weapon and whether it can move and attack
-		return getAllTilesWithinMovementRange(u.getX(), u.getY(), min, max);
+		if (map.getTileAt(x - 1, y) != null) {
+			int costLeft = map.getTileAt(x - 1, y).getMovementCost(u);  
+			if (costLeft <= distanceRemaining) {
+				addAvailableMovement(u, x - 1, y, distanceRemaining - costLeft, moveable);
+			}
+		}
+		if (map.getTileAt(x, y + 1) != null) {
+			int costDown = map.getTileAt(x, y + 1).getMovementCost(u); 
+			if (costDown <= distanceRemaining) {
+				addAvailableMovement(u, x, y + 1, distanceRemaining - costDown, moveable);
+			}
+		}
+		if (map.getTileAt(x + 1, y) != null) {
+			int costRight = map.getTileAt(x + 1, y).getMovementCost(u); 
+			if (costRight <= distanceRemaining) {
+				addAvailableMovement(u, x + 1, y, distanceRemaining - costRight, moveable);
+			}
+		}
+	}
+	
+	private void setMoveableTo(int x, int y, boolean[][] moveable) {
+		if (y < 0 || y > moveable.length) return;
+		if (x < 0 || x > moveable[y].length) return;
+		moveable[y][x] = true;
+	}
+	
+	public boolean[][] calculateUnitAttacks(Unit u) {
+		return new boolean[0][0];
 	}
 	
 	public void update(double dt) {

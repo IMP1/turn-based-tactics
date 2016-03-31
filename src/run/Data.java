@@ -192,12 +192,20 @@ public final class Data {
 		String[] defenceData = tileData[2].split(" ");
 		int defaultDefenceBonus = Integer.valueOf(defenceData[0]);
 		HashMap<Unit.Movement, Integer> defenceBonuses = new HashMap<Unit.Movement, Integer>();
-		// TODO read in non-default values
+		for (int i = 1; i < defenceData.length - 1; i += 2) {
+			Unit.Movement move = Unit.Movement.valueOf(defenceData[i]);
+			int bonus = Integer.valueOf(defenceData[i + 1]);
+			defenceBonuses.put(move, bonus);
+		}
 		
 		String[] movementData = tileData[3].split(" ");
 		int defaultMovementCost = Integer.valueOf(movementData[0]);
 		HashMap<Unit.Movement, Integer> movementCosts = new HashMap<Unit.Movement, Integer>();
-		// TODO read in non-default values
+		for (int i = 1; i < movementData.length - 1; i += 2) {
+			Unit.Movement move = Unit.Movement.valueOf(movementData[i]);
+			Integer cost = Integer.valueOf(movementData[i + 1]);
+			movementCosts.put(move, cost);
+		}
 		
 		boolean isAnimated = !tileData[4].matches("\\d \\d \\d \\d");
 		lib.Animation animation = null;
