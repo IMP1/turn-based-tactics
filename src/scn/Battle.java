@@ -8,7 +8,6 @@ import jog.Graphics.Canvas;
 
 import lib.Animation;
 import lib.Camera;
-import cls.Player;
 import cls.building.Building;
 import cls.map.DataTile;
 import cls.map.Level;
@@ -30,9 +29,6 @@ public class Battle extends Scene {
 		new Animation(new jog.Image("gfx/turn_1.png"), 1, 10, 10, false, 0.1),
 	};
 	
-	private Player[] players;
-	private Player currentPlayer;
-	private int playerTurn;
 	private boolean fogOfWar;
 	private Canvas fogCanvas;
 	private Canvas objectCanvas;
@@ -54,6 +50,7 @@ public class Battle extends Scene {
 	private Building hoveredBuilding;
 	
 	private Tile hoveredTile;
+	private String levelName;
 	private Level level;
 	private Map map;
 	private Camera camera;
@@ -64,34 +61,22 @@ public class Battle extends Scene {
 	private Animation turnAnimation;
 	
 	// TODO: remove debugging constructor
-	public Battle() { this(2, 30, 30, true); }
+	public Battle() { this("Debug"); }
 	
-	public Battle(int playerCount, int mapWidth, int mapHeight, boolean fogOfWar) {
-		players = new Player[playerCount];
-		this.fogOfWar = fogOfWar;
+	public Battle(String levelName) {
+		this.levelName = levelName;
 	}
 	
 	@Override
 	public void start() {
-		level = Data.getLevel("Debug").newLevel();
+		level = Data.getLevel(levelName).newLevel();
+		this.fogOfWar = level.hasFogOfWar();
 		map = level.getMap();
-		for (int i = 0; i < players.length; i ++) {
-			players[i] = new Player(map.getWidth(), map.getHeight());
-		}
-		// TODO remove debug stuff
-		players[0].addUnit(Data.getUnit("Engineer").newUnit(players[0], 4, 3));
-		players[0].addUnit(Data.getUnit("Commando").newUnit(players[0], 2, 6));
-		players[0].addUnit(Data.getUnit("Tank").newUnit(players[0], 12, 6));
-		players[0].addUnit(Data.getUnit("Scout").newUnit(players[0], 12, 8));
-		players[0].addUnit(Data.getUnit("Helicopter").newUnit(players[0], 2, 10));
-		players[1].addUnit(Data.getUnit("Commando").newUnit(players[1], 8, 3));
-		players[0].updateVisibility();
-		playerTurn = -1;
 		hoveredUnit = null;
 		hoveredBuilding = null;
 		hoveredTile = null;
 		selectedUnit = null;
-		movingUnit = null;
+//		movingUnit = null;
 		selectedBuilding = null;
 		camera = new Camera(0, 0, map.getWidth() * DataTile.TILE_SIZE, map.getHeight() * DataTile.TILE_SIZE);
 		if (fogOfWar) {
@@ -100,49 +85,17 @@ public class Battle extends Scene {
 			fogCanvas = jog.Graphics.newCanvas(w, h);
 			objectCanvas = jog.Graphics.newCanvas(w, h);
 		}
-		nextTurn();
-	}
-	
-	public void nextTurn() {
-		playerTurn ++;
-		playerTurn %= players.length;
-		currentPlayer = players[playerTurn];
-		currentPlayer.beginTurn();
-		if (Settings.showTurnAnimations) playTurnAnimation();
+		level.begin();
+		playTurnAnimation();
 	}
 	
 	private void playTurnAnimation() {
+		if (!Settings.showTurnAnimations) return;
 		playingTurnAnimation = true;
-		turnAnimation = turnAnimations[playerTurn];
+		turnAnimation = turnAnimations[level.getCurrentPlayerIndex()];
 		turnAnimation.start();
 	}
 
-	private Tile getTileAt(int i, int j) {
-		return map.getTileAt(i, j);
-	}
-	
-	private Building getBuildingAt(int i, int j) {
-		return level.getBuildingAt(i, j);
-	}
-	
-	private Unit getUnitAt(int i, int j) {
-		for (Player p : players) {
-			Unit u = p.getUnitAt(i, j);
-			if (u != null) return u;
-		}
-		return null;
-	}
-
-	// TODO: move to Map class
-	private int tileX(double worldX) {
-		return (int)(worldX / DataTile.TILE_SIZE);
-	}
-	
-	// TODO: move to map class
-	private int tileY(double worldY) {
-		return (int)(worldY / DataTile.TILE_SIZE);
-	}
-	
 	@Override
 	public void update(double dt) {
 		if (playingTurnAnimation) {
@@ -152,27 +105,25 @@ public class Battle extends Scene {
 			}
 			return;
 		}
-		if (currentPlayer.hasFinishedTurn()) {
-			nextTurn();
-			return;
+		if (level.getCurrentPlayer().hasFinishedTurn()) {
+			level.nextTurn();
+			playTurnAnimation();
 		}
-		for (Player p : players) {
-			p.updateUnits(dt);
-		}
-		int i = tileX(camera.getMouseWorldX());
-		int j = tileY(camera.getMouseWorldY());
-		if (hoveredUnit != getUnitAt(i, j)) {
-			hoveredUnit = getUnitAt(i, j);
+		level.update(dt);
+		int i = map.tileX(camera.getMouseWorldX());
+		int j = map.tileY(camera.getMouseWorldY());
+		if (hoveredUnit != level.getUnitAt(i, j)) {
+			hoveredUnit = level.getUnitAt(i, j);
 			if (hoveredUnit != null) {
-				hoveredUnitMoves = calculateUnitMoves(hoveredUnit);
-				hoveredUnitAttacks = calculateUnitAttacks(hoveredUnit);
+				hoveredUnitMoves = level.calculateUnitMoves(hoveredUnit);
+				hoveredUnitAttacks = level.calculateUnitAttacks(hoveredUnit);
 			}
 		}
-		hoveredBuilding = getBuildingAt(i, j);
-		hoveredTile = getTileAt(i, j);
-		if (selectedUnit != null && !selectedUnit.hasMoved()) updateSelectedUnitPath(i, j);
+		hoveredBuilding = level.getBuildingAt(i, j);
+		hoveredTile = map.getTileAt(i, j);
+		if (selectedUnit != null && selectedUnit.canMove()) updateSelectedUnitPath(i, j);
 		if (playingMovementAnimation) {
-			movingUnit.getOwner().updateVisibility();
+			movingUnit.getOwner().updateVisibility(map); // TODO move this into unit
 			if (!movingUnit.isMoving()) {
 				if (movingUnit == selectedUnit) {
 					selectUnit(movingUnit); // reselect it.
@@ -208,26 +159,25 @@ public class Battle extends Scene {
 	
 	@Override
 	public void mouseReleased(int mouseX, int mouseY, int mouseKey) {
-		int tileX = tileX(camera.getWorldX(mouseX));
-		int tileY = tileY(camera.getWorldY(mouseY));
+		int tileX = map.tileX(camera.getWorldX(mouseX));
+		int tileY = map.tileY(camera.getWorldY(mouseY));
 		if (mouseKey == MouseEvent.BUTTON1) {
 			mouseClick(tileX, tileY);
 		} else if (mouseKey == MouseEvent.BUTTON3) {
-			mouseAction(tileX, tileY);
+			smartAction(tileX, tileY);
 		}
 	}
 	
-	private void mouseAction(int i, int j) {
+	private void smartAction(int i, int j) {
 		System.out.printf("Mouse smart clicked on (%d, %d).\n", i, j);
-		// if selected uunit && valid target
-		// attack!
-		if (selectedUnit != null && canSelectedUnitAttack(i, j)) {
-			System.out.println("Unit Attacking...");
-		}
-		// if selected unit && valid location
-		// move there
-		if (selectedUnit != null && canSelectedUnitMoveTo(i, j)) {
-			moveUnit(selectedUnit, selectedUnitPath);
+		if (selectedUnit != null) {
+			if (canSelectedUnitAttack(i, j)) {
+				System.out.println("Unit Attacking...");
+			}
+			
+			if (canSelectedUnitMoveTo(i, j)) {
+				moveUnit(selectedUnit, i, j, selectedUnitPath);
+			}
 		}
 	}
 	
@@ -235,14 +185,14 @@ public class Battle extends Scene {
 		System.out.printf("Mouse clicked on (%d, %d).\n", i, j);
 		// if it's a building
 		// select building
-		Building b = getBuildingAt(i, j);
+		Building b = level.getBuildingAt(i, j);
 		if (b != null) {
 			selectBuilding(b);
 			return;
 		}
 		// if it's an unexhausted unit
 		// select unit
-		Unit u = getUnitAt(i, j);
+		Unit u = level.getUnitAt(i, j);
 		if (u != null && !u.isExhausted()) {
 			selectUnit(u);
 			return;
@@ -255,6 +205,21 @@ public class Battle extends Scene {
 		
 	}
 	
+	// TODO remove
+	public boolean canSelectedUnitMoveTo(int i, int j) {
+		if (j < 0 || j >= selectedUnitMoves.length) return false;
+		if (i < 0 || i >= selectedUnitMoves[j].length) return false;
+		return selectedUnitMoves[j][i];
+	}
+	
+	// TODO remove
+	public boolean canSelectedUnitAttack(int i, int j) {
+		if (j < 0 || j >= selectedUnitAttacks.length) return false;
+		if (i < 0 || i >= selectedUnitAttacks[j].length) return false;
+		return selectedUnitAttacks[j][i];
+	}
+	
+	
 	private void selectBuilding(Building b) {
 		selectedBuilding = b;
 	}
@@ -265,56 +230,13 @@ public class Battle extends Scene {
 			selectedUnitAttacks = null;
 			selectedUnitMoves = null;
 			selectedUnitPath = null;
-		} else {
+		} else if (u.getOwner() == level.getCurrentPlayer()) {
 			selectedUnit = u;
-			selectedUnitMoves = calculateUnitMoves(u);
-			selectedUnitAttacks = calculateUnitAttacks(u);
+			selectedUnitMoves = level.calculateUnitMoves(u);
+			selectedUnitAttacks = level.calculateUnitAttacks(u);
 			selectedUnitPath = new int[] { u.getX(), u.getY() };
 			selectedUnitPathDistance = 0;
 		}
-	}
-	
-	private boolean canSelectedUnitMoveTo(int i, int j) {
-		if (j < 0 || j >= selectedUnitMoves.length) return false;
-		if (i < 0 || i >= selectedUnitMoves[j].length) return false;
-		return selectedUnitMoves[j][i];
-	}
-	
-	private boolean canSelectedUnitAttack(int i, int j) {
-		if (j < 0 || j >= selectedUnitAttacks.length) return false;
-		if (i < 0 || i >= selectedUnitAttacks[j].length) return false;
-		return selectedUnitAttacks[j][i];
-	}
-	
-	private boolean[][] calculateUnitMoves(Unit u) {
-		if (u.hasMoved()) return new boolean[0][0];
-		int min = 0;
-		int max = u.getMoveDistance();
-		// TODO write proper movement method that takes terrain into account.
-		return getAllTilesWithinRange(u.getX(), u.getY(), min, max);
-	}
-	
-	@Deprecated
-	private boolean[][] getAllTilesWithinRange(int x, int y, int minDistance, int maxDistance) {
-		boolean [][] tiles = new boolean[map.getHeight()][map.getWidth()];
-		for (int j = 0; j < tiles.length; j ++) {
-			for (int i = 0; i < tiles[j].length; i ++) {
-				int d = Math.abs(i - x) + Math.abs(j - y);
-				if (d >= minDistance && d <= maxDistance) tiles[j][i] = true;
-			}
-		}
-		return tiles;
-	}
-	
-	private boolean[][] calculateUnitAttacks(Unit u) {
-		int min = u.getMinimumRange();
-		int max = u.getMaximumRange();
-		if (u.canMoveAndAttack() && !u.hasMoved()) {
-			min += u.getMoveDistance();
-			max += u.getMoveDistance();
-		}
-		// TODO write proper attack range method that take unit's weapon and whether it can move and attack
-		return getAllTilesWithinRange(u.getX(), u.getY(), min, max);
 	}
 	
 	private void updateSelectedUnitPath(int i, int j) {
@@ -368,8 +290,9 @@ public class Battle extends Scene {
 //		System.out.printf("New path is %d tiles long.\n", newPath.length / 2);
 	}
 	
-	private void moveUnit(Unit u, int[] path) {
+	private void moveUnit(Unit u, int x, int y, int[] path) {
 		// TODO work out if path is blocked and alter path so it stops at the interruption.
+		if (x != path[path.length-2] || y != path[path.length-1]) return;
 		System.out.printf("Moving Unit %s.\n", u.name);
 		for (int i = 0; i < path.length; i += 2) {
 			System.out.printf("\t(%d, %d)\n", i, i+1);
@@ -385,9 +308,8 @@ public class Battle extends Scene {
 		camera.set();
 			drawMap();
 			if (fogOfWar) drawFog();
-				drawBuildings();
-				drawUnits();
-				if (playingMovementAnimation) drawUnitMovement();
+			level.drawBuildings();
+			level.drawUnits();
 			if (fogOfWar) hideFog();
 			if (selectedUnit != null && (!playingMovementAnimation || movingUnit != selectedUnit)) {
 				drawSelectedUnitOptions();
@@ -418,12 +340,8 @@ public class Battle extends Scene {
 		jog.Graphics.setColour(255, 255, 255);
 	}
 	
-	private boolean[][] getVisibleTiles() {
-		return currentPlayer.getVisibleTiles();
-	}
-	
 	private void hideFog() {
-		boolean[][] visible = getVisibleTiles();
+		boolean[][] visible = level.getVisibleTiles();
 		for (int j = 0; j < visible.length; j ++) {
 			for (int i = 0; i < visible[j].length; i ++) {
 				if (visible[j][i]) {
@@ -437,16 +355,6 @@ public class Battle extends Scene {
 		jog.Graphics.setColour(255, 255, 255);
 		jog.Graphics.draw(objectCanvas, 0, 0);
 		jog.Graphics.draw(fogCanvas, 0, 0);
-	}
-	
-	private void drawBuildings() {
-		
-	}
-	
-	private void drawUnits() {
-		for (Player p : players) {
-			p.drawUnits();
-		}
 	}
 	
 	private void drawTileGUI() {
@@ -537,14 +445,7 @@ public class Battle extends Scene {
 	private void drawBuildingOptions() {
 		
 	}
-	
-	/**
-	 * Draw the unit moving.
-	 */
-	private void drawUnitMovement() {
-		
-	}
-	
+
 	private void drawAttack() {
 		
 	}
