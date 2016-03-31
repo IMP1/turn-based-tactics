@@ -1,7 +1,9 @@
 package cls.unit;
 
+import run.Settings;
 import lib.Sprite;
 import cls.Player;
+import cls.Player.Faction;
 import cls.map.DataTile;
 import cls.weapon.Weapon;
 
@@ -33,12 +35,13 @@ public class Unit extends cls.GameObject {
 	public int      getDefence()        { return data.defence;          }
 	public int      getInfluence()      { return data.influence;        }
 	public boolean  canMoveAndAttack()  { return data.canMoveAndAttack; }
+	public boolean  canMoveTwice()      { return false;                 } // TODO add this into unit data.
 	
 	private Player   owner;
 	private int      health;
 	private Weapon[] weapons;
 	private int      fuel;
-	private boolean  hasMoved;
+	private int      movesPerformed;
 	private boolean  isMoving;
 	private boolean  isExhausted;
 	private int[]    movePath;
@@ -76,8 +79,12 @@ public class Unit extends cls.GameObject {
 		return isMoving;
 	}
 	
-	public boolean hasMoved() {
-		return hasMoved;
+	public boolean canMove() {
+		if (canMoveTwice()) {
+			return movesPerformed < 2;
+		} else {
+			return movesPerformed < 1;
+		}
 	}
 	
 	protected Unit(Player owner, int x, int y, DataUnit data) {
@@ -99,7 +106,7 @@ public class Unit extends cls.GameObject {
 		fuel = data.startingFuel;
 		isDestroyed = false;
 		isMoving = false;
-		hasMoved = false;
+		movesPerformed = 0;
 		isExhausted = false;
 	}
 	
@@ -107,7 +114,7 @@ public class Unit extends cls.GameObject {
 	public void refresh() {
 		fuel -= data.fuelCost;
 		isExhausted = false;
-		hasMoved = false;
+		movesPerformed = 0;
 	}
 	
 	public void refuel() {
@@ -135,6 +142,17 @@ public class Unit extends cls.GameObject {
 		if (health < 0) health = 0;
 		if (health == 0) {
 			destroy();
+		}
+	}
+
+	public void move(int[] path) {
+		System.out.printf("Moving %s.\n", name);
+		isMoving = true;
+		movePath = path;
+		pathPosition = -1;
+		nextPathPoint();
+		if (!Settings.showMoveAnimations) {
+			while (isMoving) nextPathPoint();
 		}
 	}
 	
@@ -194,18 +212,10 @@ public class Unit extends cls.GameObject {
 		animationX = currentX * DataTile.TILE_SIZE;
 		animationY = currentY * DataTile.TILE_SIZE;
 	}
-	
-	public void move(int[] path) {
-		System.out.printf("Moving %s.\n", name);
-		isMoving = true;
-		movePath = path;
-		pathPosition = -1;
-		nextPathPoint();
-	}
-	
+
 	private void finishMoving() {
 		isMoving = false;
-		hasMoved = true;
+		movesPerformed ++;
 		sprite.setPose(0);
 	}
 	
@@ -252,7 +262,11 @@ public class Unit extends cls.GameObject {
 		if (isMoving) {
 			jog.Graphics.draw(sprite, animationX, animationY);
 		} else {
-			jog.Graphics.draw(sprite, x * DataTile.TILE_SIZE, y * DataTile.TILE_SIZE);
+			if (owner.faction == Faction.BLUE_SKY_CORPS) {
+				jog.Graphics.draw(sprite, x * DataTile.TILE_SIZE, y * DataTile.TILE_SIZE);
+			} else {
+				jog.Graphics.draw(sprite, x * DataTile.TILE_SIZE, y * DataTile.TILE_SIZE, -1, 1, 0, DataTile.TILE_SIZE / 2, DataTile.TILE_SIZE / 2);
+			}
 		}
 	}
 	
