@@ -11,6 +11,14 @@ public class Unit extends cls.GameObject {
 
 	private static final int MOVE_SPEED = DataTile.TILE_SIZE * 2; 
 	
+	public enum Action {
+		MOVE,
+		ATTACK,
+		BUILD,
+		DEFEND,
+		LOAD,
+	}
+	
 	public enum Kind {
 		INFANTRY,
 		VEHICLE,

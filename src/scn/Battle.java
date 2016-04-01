@@ -14,6 +14,7 @@ import cls.map.Level;
 import cls.map.Map;
 import cls.map.Tile;
 import cls.unit.Unit;
+import cls.unit.Unit.Action;
 import run.Data;
 import run.Settings;
 import scn.Scene;
@@ -34,6 +35,7 @@ public class Battle extends Scene {
 	private Canvas objectCanvas;
 	
 	private Unit selectedUnit;
+	private Action selectedAction;
 	private boolean[][] selectedUnitMoves;
 	private int[] selectedUnitPath;
 	private int selectedUnitPathDistance;
@@ -155,6 +157,23 @@ public class Battle extends Scene {
 			selectedUnit = null;
 			selectedBuilding = null;
 		}
+		if (selectedUnit != null) {
+			if (key == KeyEvent.VK_M) {
+				selectedAction = Action.MOVE;
+			}
+			if (key == KeyEvent.VK_A) {
+				selectedAction = Action.ATTACK;
+			}
+			if (key == KeyEvent.VK_B) {
+				selectedAction = Action.BUILD;
+			}
+			if (key == KeyEvent.VK_D) {
+				selectedAction = Action.DEFEND;
+			}
+			if (key == KeyEvent.VK_L) {
+				selectedAction = Action.LOAD;
+			}
+		}
 	}
 	
 	@Override
@@ -183,6 +202,28 @@ public class Battle extends Scene {
 	
 	private void mouseClick(int i, int j) {
 		System.out.printf("Mouse clicked on (%d, %d).\n", i, j);
+		
+		if (selectedUnit != null && selectedAction != null) {
+			switch (selectedAction) {
+			case MOVE:
+				if (canSelectedUnitMoveTo(i, j)) {
+					moveUnit(selectedUnit, i, j, selectedUnitPath);
+				}
+				break;
+			case ATTACK:
+				if (canSelectedUnitAttack(i, j)) {
+					attackWithUnit(selectedUnit, i, j, selectedUnitPath);
+				}
+				break;
+			case BUILD:
+				break;
+			case DEFEND:
+				break;
+			case LOAD:
+				break;
+			}
+		}
+		
 		// if it's a building
 		// select building
 		Building b = level.getBuildingAt(i, j);
@@ -205,6 +246,12 @@ public class Battle extends Scene {
 		
 	}
 	
+	private void attackWithUnit(Unit unit, int i, int j, int[] selectedUnitPath) {
+		// TODO add some indirect attackTile option maybe?
+		Unit defender = level.getUnitAt(i, j);
+		// TODO begin the attack!
+	}
+
 	// TODO remove
 	public boolean canSelectedUnitMoveTo(int i, int j) {
 		if (j < 0 || j >= selectedUnitMoves.length) return false;
@@ -230,12 +277,14 @@ public class Battle extends Scene {
 			selectedUnitAttacks = null;
 			selectedUnitMoves = null;
 			selectedUnitPath = null;
+			selectedAction = null;
 		} else if (u.getOwner() == level.getCurrentPlayer()) {
 			selectedUnit = u;
 			selectedUnitMoves = level.calculateUnitMoves(u);
 			selectedUnitAttacks = level.calculateUnitAttacks(u);
 			selectedUnitPath = new int[] { u.getX(), u.getY() };
 			selectedUnitPathDistance = 0;
+			selectedAction = null;
 		}
 	}
 	
@@ -396,6 +445,7 @@ public class Battle extends Scene {
 				jog.Graphics.translate(-x, -y);
 			jog.Graphics.setScissor();
 		}
+		// TODO Draw Orders, and currently selected one
 	}
 	
 	private void drawSelectedUnitOptions() {
