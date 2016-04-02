@@ -339,8 +339,9 @@ public final class Data {
 		int movementDistance = Integer.valueOf(movementData[1]);
 		
 		String[] costData = unitData[3].split(" ");
-		int turnsToMake = Integer.valueOf(costData[0]);
-		int costToMake = Integer.valueOf(costData[1]);
+		int populationCost = Integer.valueOf(costData[0]);
+		int turnsToMake = Integer.valueOf(costData[1]);
+		int costToMake = Integer.valueOf(costData[2]);
 		
 		String[] fuelData = unitData[4].split(" ");
 		int startingFuel = Integer.valueOf(fuelData[0]);
@@ -390,7 +391,7 @@ public final class Data {
 		}
 		
 		return new DataUnit(name, kind, movement, movementDistance, 
-							turnsToMake, costToMake,
+							populationCost, turnsToMake, costToMake,
 							fuelCost, startingFuel, maxFuel, usesFuelIfNotMoved, diesOnFuelDepletion,
 						    vision, defence, influence, canMoveAndAttack, canBuild, 
 						    sprite, icon, weaponNames,
@@ -428,6 +429,7 @@ public final class Data {
 		String[] mapData = levelData[1].split(" ");
 		DataMap dataMap = Data.getMap(mapData[0]);
 		boolean fogOfWar = Boolean.valueOf(mapData[1]);
+		int populationCount = Integer.valueOf(mapData[2]);
 		
 		String[] playerData = levelData[2].split(" ");
 		int playerCount = Integer.valueOf(playerData[0]);
@@ -477,7 +479,7 @@ public final class Data {
 			buildingStartingOwners = new int[0];
 		}
 		
-		return new DataLevel(name, dataMap, fogOfWar, playerCount, factions, startingUnits, unitStartingPositions, startingBuildings, buildingStartingPositions, buildingStartingOwners);
+		return new DataLevel(name, dataMap, fogOfWar, playerCount, factions, populationCount, startingUnits, unitStartingPositions, startingBuildings, buildingStartingPositions, buildingStartingOwners);
 	}
 
 }

@@ -1,7 +1,7 @@
 Scout
 INFANTRY
 FOOT 4
-1 20
+1 1 20
 100 100 1 FALSE FALSE
 5 0 0 FALSE FALSE
 gfx/unit/commando.png 5 4 0.2

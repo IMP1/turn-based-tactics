@@ -17,6 +17,7 @@ public class DataUnit {
 	public final Movement                    movement;
 	public final int                         moveDistance;
 	public final int                         turnsToMake;
+	public final int                         populationCost;
 	public final int                         costToMake;
 	public final int                         visionDistance;
 	public final int                         defence;
@@ -41,7 +42,7 @@ public class DataUnit {
 	private boolean finalised;
 		
 	public DataUnit(String name, Kind unitClass, Movement movement, int moveDistance,
-					int turnsToMake, int costToMake,
+					int populationCost, int turnsToMake, int costToMake,
 			        int fuelCost, int startingFuel, int maxFuel, boolean usesFuelRegardless, boolean diesOnFuelDepletion, 
 			        int visionDistance, int defence, int influence, 
 			        boolean canMoveAndAttack, boolean canBuild, 
@@ -54,6 +55,7 @@ public class DataUnit {
 		this.unitClass = unitClass;
 		this.movement = movement;
 		this.moveDistance = moveDistance;
+		this.populationCost = populationCost;
 		this.turnsToMake = turnsToMake;
 		this.costToMake = costToMake;
 		this.visionDistance = visionDistance;

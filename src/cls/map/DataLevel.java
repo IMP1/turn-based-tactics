@@ -12,6 +12,7 @@ public class DataLevel {
 	public final boolean        fogOfWar;
 	public final int            playerCount;
 	public final Faction[]      factions;
+	public final int            populationLimit;
 	public final DataUnit[][]   units;
 		private String[][] unitNames;
 	public final int[][][]      unitStartingPositions;
@@ -24,13 +25,14 @@ public class DataLevel {
 	private boolean finalised;
 		
 	public DataLevel(String name, DataMap mapData, boolean fogOfWar, int playerCount, Faction[] factions,
-			         String[][] unitNames, int[][][] unitStartingPositions, 
+			         int populationLimit, String[][] unitNames, int[][][] unitStartingPositions, 
 			         String[] buildingNames, int[][] buildingStartingPositions, int[] buildingStartingOwners) {
 		this.name = name;
 		this.mapData = mapData;
 		this.fogOfWar = fogOfWar;
 		this.playerCount = playerCount;
 		this.factions = factions;
+		this.populationLimit = populationLimit;
 		this.units = new DataUnit[playerCount][unitNames[0].length];
 		this.unitNames = unitNames;
 		this.unitStartingPositions = unitStartingPositions;
