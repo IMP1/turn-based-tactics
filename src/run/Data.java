@@ -19,6 +19,35 @@ import cls.weapon.DataWeapon;
 public final class Data {
 	private Data() {}
 	
+	private static Object finishedMonitor = new Object();
+	private static Object messageMonitor = new Object();
+	private static String message = "";
+	private static boolean finished = false;
+	
+	private static void setFinished(boolean finished) {
+		synchronized (finishedMonitor) {
+			Data.finished = finished;
+		}
+	}
+	
+	public static boolean isFinished() {
+		synchronized (finishedMonitor) {
+			return finished;
+		}
+	}
+	
+	private static void setMessage(String message) {
+		synchronized (messageMonitor) {
+			Data.message = message;
+		}
+	}
+	
+	public static String getMessage() {
+		synchronized (messageMonitor) {
+			return message;
+		}
+	}
+	
 	public static class MissingDataException extends RuntimeException {
 		private static final long serialVersionUID = -7046121332447383903L;
 		public MissingDataException(String message) {
@@ -83,15 +112,25 @@ public final class Data {
 	}
 	
 	public static void load() {
-		loadTiles();
-		loadBuildings();
-		loadWeapons();
-		loadUnits();
-		loadMaps();
-		loadLevels();
+		Thread dataLoader = new Thread() {
+			@Override
+			public void run() {
+				setFinished(false);
+				loadTiles();
+				loadBuildings();
+				loadWeapons();
+				loadUnits();
+				loadMaps();
+				loadLevels();
+				setMessage("");
+				setFinished(true);
+			}
+		};
+		dataLoader.start();
 	}
 	
 	private static void loadTiles() {
+		setMessage("Loading Tiles...");
 		ArrayList<DataTile> dataTiles = new ArrayList<DataTile>();
 		for (String filename : jog.Filesystem.enumerate("dat/tile")) {
 			try {
@@ -107,6 +146,7 @@ public final class Data {
 	}
 	
 	private static void loadBuildings() {
+		setMessage("Loading Buildings...");
 		ArrayList<DataBuilding> dataBuildings = new ArrayList<DataBuilding>();
 		for (String filename : jog.Filesystem.enumerate("dat/building")) {
 			try {
@@ -122,6 +162,7 @@ public final class Data {
 	}
 	
 	private static void loadWeapons() {
+		setMessage("Loading Weapons...");
 		ArrayList<DataWeapon> dataWeapons = new ArrayList<DataWeapon>();
 		for (String filename : jog.Filesystem.enumerate("dat/weapon")) {
 			try {
@@ -137,6 +178,7 @@ public final class Data {
 	}
 	
 	private static void loadUnits() {
+		setMessage("Loading Units...");
 		ArrayList<DataUnit> dataActors = new ArrayList<DataUnit>();
 		for (String filename : jog.Filesystem.enumerate("dat/unit")) {
 			try {
@@ -152,6 +194,7 @@ public final class Data {
 	}
 	
 	private static void loadMaps() {
+		setMessage("Loading Maps...");
 		ArrayList<DataMap> dataMaps = new ArrayList<DataMap>();
 		for (String filename : jog.Filesystem.enumerate("dat/map")) {
 			try {
@@ -167,6 +210,7 @@ public final class Data {
 	}
 	
 	private static void loadLevels() {
+		setMessage("Loading Levels...");
 		ArrayList<DataLevel> dataLevels = new ArrayList<DataLevel>();
 		for (String filename : jog.Filesystem.enumerate("dat/level")) {
 			try {
@@ -452,7 +496,6 @@ public final class Data {
 					unitStartingPositions[n][i / 3][0] = Integer.valueOf(unitData[i+1]);
 					unitStartingPositions[n][i / 3][1] = Integer.valueOf(unitData[i+2]);
 				}
-				System.out.printf("Player %d has %d units.\n", n, startingUnits[n].length);
 			}
 		} else {
 			startingUnits = new String[0][0];
