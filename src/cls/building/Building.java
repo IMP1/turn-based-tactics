@@ -48,8 +48,8 @@ public class Building extends cls.GameObject {
 	
 	public boolean canStoreUnit(Unit u) {
 		if (spaceForUnits == 0) return false;
-		if (!data.unitStorage.containsKey(u)) return false;
-		return data.unitStorage.get(u) <= spaceForUnits;
+		if (!data.unitStorage.containsKey(u.getUnitKind())) return false;
+		return data.unitStorage.get(u.getUnitKind()) <= spaceForUnits;
 	}
 	
 	public boolean tryStoreUnit(Unit u) {
