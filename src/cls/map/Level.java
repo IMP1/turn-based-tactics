@@ -1,6 +1,7 @@
 package cls.map;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import cls.Player;
 import cls.building.Building;
@@ -105,10 +106,74 @@ public class Level {
 		return players[currentPlayer].getVisibleTiles();
 	}
 	
+	public int[] getPathTo(final Unit u, final int targetX, final int targetY, final int[] previousPath, final int distanceRemaining) {
+		final int currentX = previousPath[previousPath.length-2];
+		final int currentY = previousPath[previousPath.length-1];
+		if (currentX == targetX && currentY == targetY)
+		    return previousPath;
+		if (distanceRemaining == 0) 
+			return null;
+		
+		int[] pathUp = null;
+		if (map.getTileAt(currentX, currentY - 1) != null) {
+			int costUp = map.getTileAt(currentX, currentY - 1).getMovementCost(u);
+			if (costUp <= distanceRemaining) {
+				int[] newPath = Arrays.copyOf(previousPath, previousPath.length + 2);
+				newPath[newPath.length - 2] = currentX;
+				newPath[newPath.length - 1] = currentY - 1;
+				pathUp = getPathTo(u, targetX, targetY, newPath, distanceRemaining - costUp);
+			}
+		}
+		int[] pathLeft = null;
+		if (map.getTileAt(currentX - 1, currentY) != null) {
+			int costLeft = map.getTileAt(currentX - 1, currentY).getMovementCost(u);
+			if (costLeft <= distanceRemaining) {
+				int[] newPath = Arrays.copyOf(previousPath, previousPath.length + 2);
+				newPath[newPath.length - 2] = currentX - 1;
+				newPath[newPath.length - 1] = currentY;
+				pathLeft = getPathTo(u, targetX, targetY, newPath, distanceRemaining - costLeft);
+			}
+		}
+		int[] pathDown = null;
+		if (map.getTileAt(currentX, currentY + 1) != null) {
+			int costDown = map.getTileAt(currentX, currentY + 1).getMovementCost(u);
+			if (costDown <= distanceRemaining) {
+				int[] newPath = Arrays.copyOf(previousPath, previousPath.length + 2);
+				newPath[newPath.length - 2] = currentX;
+				newPath[newPath.length - 1] = currentY + 1;
+				pathDown = getPathTo(u, targetX, targetY, newPath, distanceRemaining - costDown);
+			}
+		}
+		int[] pathRight = null;
+		if (map.getTileAt(currentX + 1, currentY) != null) {
+			int costRight = map.getTileAt(currentX + 1, currentY).getMovementCost(u);
+			if (costRight <= distanceRemaining) {
+				int[] newPath = Arrays.copyOf(previousPath, previousPath.length + 2);
+				newPath[newPath.length - 2] = currentX + 1;
+				newPath[newPath.length - 1] = currentY;
+				pathRight = getPathTo(u, targetX, targetY, newPath, distanceRemaining - costRight);
+			}
+		}
+		
+		return getShortestPath(pathUp, pathLeft, pathRight, pathDown);
+	}
+	
+	private int[] getShortestPath(int[]... paths) {
+		int shortestPathLength = -1;
+		int[] shortestPath = null;
+		for (int[] path : paths) {
+			if (path != null && (shortestPathLength == -1 || path.length < shortestPathLength)) {
+				shortestPath = path;
+				shortestPathLength = path.length;
+			}
+		}
+		return shortestPath;
+	}
+	
 	public boolean[][] calculateUnitMoves(Unit u) {
 		if (!u.canMove()) return new boolean[0][0];
 		int max = u.getMoveDistance();
-		boolean [][] tiles = new boolean[map.getHeight()][map.getWidth()];
+		boolean[][] tiles = new boolean[map.getHeight()][map.getWidth()];
 		
 		addAvailableMovement(u, u.getX(), u.getY() - 1, max, tiles);
 		addAvailableMovement(u, u.getX() - 1, u.getY(), max, tiles);

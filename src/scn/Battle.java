@@ -3,6 +3,7 @@ package scn;
 import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 
 import jog.Graphics.Canvas;
 
@@ -38,7 +39,7 @@ public class Battle extends Scene {
 	private Action selectedAction;
 	private boolean[][] selectedUnitMoves;
 	private int[] selectedUnitPath;
-	private int selectedUnitPathDistance;
+	private int selectedPathDistance;
 	private boolean[][] selectedUnitAttacks;
 	
 	private Unit movingUnit;
@@ -114,16 +115,20 @@ public class Battle extends Scene {
 		level.update(dt);
 		int i = map.tileX(camera.getMouseWorldX());
 		int j = map.tileY(camera.getMouseWorldY());
-		if (hoveredUnit != level.getUnitAt(i, j)) {
-			hoveredUnit = level.getUnitAt(i, j);
-			if (hoveredUnit != null) {
-				hoveredUnitMoves = level.calculateUnitMoves(hoveredUnit);
-				hoveredUnitAttacks = level.calculateUnitAttacks(hoveredUnit);
+		if (level.getCurrentPlayer().canSee(i, j)) {
+			if (hoveredUnit != level.getUnitAt(i, j)) {
+				hoveredUnit = level.getUnitAt(i, j);
+				if (hoveredUnit != null) {
+					hoveredUnitMoves = level.calculateUnitMoves(hoveredUnit);
+					hoveredUnitAttacks = level.calculateUnitAttacks(hoveredUnit);
+				}
 			}
+			hoveredBuilding = level.getBuildingAt(i, j);
+			hoveredTile = map.getTileAt(i, j);
 		}
-		hoveredBuilding = level.getBuildingAt(i, j);
-		hoveredTile = map.getTileAt(i, j);
-		if (selectedUnit != null && selectedUnit.canMove()) updateSelectedUnitPath(i, j);
+		if (selectedUnit != null && selectedUnit.canMove()) {
+			updateSelectedUnitPath(i, j);
+		}
 		if (playingMovementAnimation) {
 			movingUnit.getOwner().updateVisibility(map); // TODO move this into unit
 			if (!movingUnit.isMoving()) {
@@ -202,6 +207,8 @@ public class Battle extends Scene {
 	
 	private void mouseClick(int i, int j) {
 		System.out.printf("Mouse clicked on (%d, %d).\n", i, j);
+		System.out.println(selectedUnit);
+		System.out.println(selectedAction);
 		
 		if (selectedUnit != null && selectedAction != null) {
 			switch (selectedAction) {
@@ -211,7 +218,9 @@ public class Battle extends Scene {
 				}
 				break;
 			case ATTACK:
+				System.out.println("Attacking?");
 				if (canSelectedUnitAttack(i, j)) {
+					System.out.println("Attacking.");
 					attackWithUnit(selectedUnit, i, j, selectedUnitPath);
 				}
 				break;
@@ -248,22 +257,34 @@ public class Battle extends Scene {
 	
 	private void attackWithUnit(Unit unit, int i, int j, int[] selectedUnitPath) {
 		// TODO add some indirect attackTile option maybe?
+		System.out.printf("%s is attacking.\n", unit.name);
 		Unit defender = level.getUnitAt(i, j);
-		// TODO begin the attack!
+		if (defender != null) {
+			System.out.printf("%s is defending.\n", defender.name);
+			unit.attack(defender);
+			playingAttackAnimation = true;
+		}
 	}
 
 	// TODO remove
+	@Deprecated
 	public boolean canSelectedUnitMoveTo(int i, int j) {
 		if (j < 0 || j >= selectedUnitMoves.length) return false;
 		if (i < 0 || i >= selectedUnitMoves[j].length) return false;
+		if (level.getCurrentPlayer().canSee(i, j)) {
+			Unit u = level.getUnitAt(i, j);
+			if (u != null && u != selectedUnit) return false;
+		}
 		return selectedUnitMoves[j][i];
 	}
 	
 	// TODO remove
+	@Deprecated
 	public boolean canSelectedUnitAttack(int i, int j) {
-		if (j < 0 || j >= selectedUnitAttacks.length) return false;
-		if (i < 0 || i >= selectedUnitAttacks[j].length) return false;
-		return selectedUnitAttacks[j][i];
+		return true;
+//		if (j < 0 || j >= selectedUnitAttacks.length) return false;
+//		if (i < 0 || i >= selectedUnitAttacks[j].length) return false;
+//		return selectedUnitAttacks[j][i];
 	}
 	
 	
@@ -283,60 +304,97 @@ public class Battle extends Scene {
 			selectedUnitMoves = level.calculateUnitMoves(u);
 			selectedUnitAttacks = level.calculateUnitAttacks(u);
 			selectedUnitPath = new int[] { u.getX(), u.getY() };
-			selectedUnitPathDistance = 0;
+			selectedPathDistance = 0;
 			selectedAction = null;
 		}
 	}
 	
-	private void updateSelectedUnitPath(int i, int j) {
-		{ // Don't allow diagonal movement.
-			int n = selectedUnitPath.length;
-			int dx = i - selectedUnitPath[n-2];
-			int dy = j - selectedUnitPath[n-1];
-			if (Math.abs(dx) + Math.abs(dy) > 1) {
-				return;
-			}
-		}
-
-		int tileOnPath = -1;
-		for (int n = 0; n < selectedUnitPath.length; n += 2) {
-			if (selectedUnitPath[n] == i && selectedUnitPath[n+1] == j) {
-				tileOnPath = n / 2;
-			}
-		}
+	private void updateSelectedUnitPath(final int x, final int y) {
+		final int lastX = selectedUnitPath[selectedUnitPath.length - 2];
+		final int lastY = selectedUnitPath[selectedUnitPath.length - 1];
 		
-		if (tileOnPath == -1 && selectedUnitPathDistance > selectedUnit.getMoveDistance()) {
+		final int dx = x - lastX;
+		final int dy = y - lastY;
+		
+		/*
+		 * If we haven't moved, don't do anything.
+		 */
+		if (dx == 0 && dy == 0) return;
+		
+		/*
+		 * If this tile is on the path, revert back to it.
+		 */
+		int tileOnPath = -1;
+		for (int i = 0; i < selectedUnitPath.length; i += 2) {
+			if (selectedUnitPath[i] == x && selectedUnitPath[i+1] == y) {
+				tileOnPath = i / 2;
+			}
+		}
+		if (tileOnPath >= 0) {
+			selectedUnitPath = Arrays.copyOf(selectedUnitPath, (tileOnPath+1) * 2);
+			updatePathDistance();
+			System.out.println("Reverted back to previous tile.");
 			return;
 		}
 		
-		int[] newPath;
-		int newDistance;
-		if (tileOnPath == -1) {
-//			System.out.printf("Tile not on path, adding on the end.\n");
-			newDistance = selectedUnitPathDistance + map.getTileAt(i, j).getMovementCost(selectedUnit);
-			if (newDistance > selectedUnit.getMoveDistance()) return;
-			newPath = new int[Math.min(selectedUnitPath.length + 2, (selectedUnit.getMoveDistance() + 1) * 2)];
-			for (int n = 0; n < newPath.length - 2; n += 2) {
-				newPath[n] = selectedUnitPath[n];
-				newPath[n+1] = selectedUnitPath[n+1];
+		final int distanceRemaining = selectedUnit.getMoveDistance() - selectedPathDistance;
+		
+		/*
+		 * If we've added one tile on the end of our path.		
+		 */
+		if (Math.abs(dx) + Math.abs(dy) == 1) {
+			final int moveCost = map.getTileAt(x, y).getMovementCost(selectedUnit);
+			if (moveCost > distanceRemaining) {
+				// Too far. Try to get there from the unit's position.
+				int[] newPath = level.getPathTo(selectedUnit, x, y, new int[] { selectedUnit.getX(), selectedUnit.getY() }, selectedUnit.getMoveDistance());
+				if (newPath != null) {
+					selectedUnitPath = newPath;
+					updatePathDistance();
+					System.out.println("Added new path to path.");
+				}
+			} else {
+				// Not too far, add it on the end.
+				int[] newPath = Arrays.copyOf(selectedUnitPath, selectedUnitPath.length + 2);
+				newPath[newPath.length - 2] = x;
+				newPath[newPath.length - 1] = y;
+				selectedUnitPath = newPath;
+//				selectedPathDistance += moveCost;
+				updatePathDistance();
+				System.out.println("Added a tile on the end.");
 			}
-			newPath[newPath.length-2] = i;
-			newPath[newPath.length-1] = j;
+			return;
+		}
+
+		/* 
+		 * If we've moved the mouse far/diagonally
+		 */
+		boolean changedPath = false;
+		// Get path from last path point
+		int[] newPath = level.getPathTo(selectedUnit, x, y, selectedUnitPath, distanceRemaining); 
+		if (newPath != null) {
+			selectedUnitPath = newPath;
+			changedPath = true;
 		} else {
-			// TODO interpolate all tiles from last one to this
-//			System.out.printf("Tile on path (at %d), reverting back to it.\n", tileOnPath);
-			newDistance = 0;
-			newPath = new int[(tileOnPath+1) * 2];
-			for (int n = 0; n < newPath.length; n += 2) {
-				newPath[n] = selectedUnitPath[n];
-				newPath[n+1] = selectedUnitPath[n+1];
-				if (n > 0) // don't count the square we'r on
-					newDistance += map.getTileAt(newPath[n], newPath[n+1]).getMovementCost(selectedUnit);
+			// Get path from unit position
+			newPath = level.getPathTo(selectedUnit, x, y, new int[] { selectedUnit.getX(), selectedUnit.getY() }, selectedUnit.getMoveDistance());
+			if (newPath != null) {
+				selectedUnitPath = newPath;
+				changedPath = true;
 			}
 		}
-		selectedUnitPathDistance = newDistance;
-		selectedUnitPath = newPath;
-//		System.out.printf("New path is %d tiles long.\n", newPath.length / 2);
+		// Update path distance
+		if (changedPath) {
+			updatePathDistance();
+			System.out.println("Added new path to path.");
+		}
+	}
+	
+	private void updatePathDistance() {
+		int newDistance = 0;
+		for (int i = 2; i < selectedUnitPath.length; i += 2) {
+			newDistance += map.getTileAt(selectedUnitPath[i], selectedUnitPath[i+1]).getMovementCost(selectedUnit);
+		}
+		selectedPathDistance = newDistance;
 	}
 	
 	private void moveUnit(Unit u, int x, int y, int[] path) {
@@ -372,6 +430,7 @@ public class Battle extends Scene {
 		if (selectedBuilding != null) drawBuildingOptions();
 		if (playingTurnAnimation) jog.Graphics.draw(turnAnimation, 0, 0);
 		if (playingAttackAnimation) drawAttack();
+		drawDebug();
 	}
 	
 	private void drawMap() {
@@ -497,7 +556,18 @@ public class Battle extends Scene {
 	}
 
 	private void drawAttack() {
-		
+		if (!Settings.showAttackAnimations) {
+			playingAttackAnimation = false;
+			return;
+		}
+	}
+	
+	// TODO remove
+	private void drawDebug() {
+		if (selectedAction != null)
+			jog.Graphics.print(selectedAction.toString(), 0, 0);
+		if (selectedUnitPath != null && selectedUnit != null)
+			jog.Graphics.print(String.valueOf(selectedPathDistance) + " / " + selectedUnit.getMoveDistance(), 0, 16);
 	}
 
 }
