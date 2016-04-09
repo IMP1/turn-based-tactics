@@ -548,7 +548,23 @@ public class Battle extends Scene {
 			jog.Graphics.line(x1, y1, x2, y2);
 		}
 		jog.Graphics.setLineWidth(1);
-		// TODO draw an arrow head
+		// Draw arrowhead
+		if (selectedUnitPath.length < 4) return;
+		final int W = DataTile.TILE_SIZE;
+		int x1, x2, x3;
+		x1 = x2 = x3 = (int)((selectedUnitPath[selectedUnitPath.length - 2] + 0.5) * W);
+		int y1, y2, y3;
+		y1 = y2 = y3 = (int)((selectedUnitPath[selectedUnitPath.length - 1] + 0.5) * W);
+		int dx = selectedUnitPath[selectedUnitPath.length - 2] - selectedUnitPath[selectedUnitPath.length - 4];
+		int dy = selectedUnitPath[selectedUnitPath.length - 1] - selectedUnitPath[selectedUnitPath.length - 3];
+		if (dx > 0) 
+			jog.Graphics.polygon(true, x1 + W / 2, y1, x2, y2 - W / 2, x3, y3 + W / 2);
+		else if (dx < 0)
+			jog.Graphics.polygon(true, x1 - W / 2, y1, x2, y2 - W / 2, x3, y3 + W / 2);
+		else if (dy > 0)
+			jog.Graphics.polygon(true, x1, y1 + W / 2, x2 - W / 2, y2, x3 + W / 2, y3);
+		else if (dy < 0)
+			jog.Graphics.polygon(true, x1, y1 - W / 2, x2 - W / 2, y2, x3 + W / 2, y3);
 	}
 
 	private void drawBuildingOptions() {
