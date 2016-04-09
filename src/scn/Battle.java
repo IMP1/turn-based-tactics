@@ -538,9 +538,10 @@ public class Battle extends Scene {
 	
 	private void drawSelectedUnitPath() {
 		if (selectedUnitPath.length < 2) return;
+		// Draw line
 		jog.Graphics.setColour(255, 255, 255);
 		jog.Graphics.setLineWidth(DataTile.TILE_SIZE / 2);
-		for (int n = 0; n < selectedUnitPath.length - 2; n += 2) {
+		for (int n = 0; n < selectedUnitPath.length - 4; n += 2) {
 			int x1 = (int)((selectedUnitPath[n] + 0.5) * DataTile.TILE_SIZE); 
 			int y1 = (int)((selectedUnitPath[n+1] + 0.5) * DataTile.TILE_SIZE);
 			int x2 = (int)((selectedUnitPath[n+2] + 0.5) * DataTile.TILE_SIZE); 
@@ -548,23 +549,29 @@ public class Battle extends Scene {
 			jog.Graphics.line(x1, y1, x2, y2);
 		}
 		jog.Graphics.setLineWidth(1);
-		// Draw arrowhead
+		
 		if (selectedUnitPath.length < 4) return;
+		// Draw arrowhead
 		final int W = DataTile.TILE_SIZE;
-		int x1, x2, x3;
-		x1 = x2 = x3 = (int)((selectedUnitPath[selectedUnitPath.length - 2] + 0.5) * W);
-		int y1, y2, y3;
-		y1 = y2 = y3 = (int)((selectedUnitPath[selectedUnitPath.length - 1] + 0.5) * W);
+		int ox = (int)((selectedUnitPath[selectedUnitPath.length - 4] + 0.5) * W);
+		int oy = (int)((selectedUnitPath[selectedUnitPath.length - 3] + 0.5) * W);
 		int dx = selectedUnitPath[selectedUnitPath.length - 2] - selectedUnitPath[selectedUnitPath.length - 4];
 		int dy = selectedUnitPath[selectedUnitPath.length - 1] - selectedUnitPath[selectedUnitPath.length - 3];
-		if (dx > 0) 
-			jog.Graphics.polygon(true, x1 + W / 2, y1, x2, y2 - W / 2, x3, y3 + W / 2);
-		else if (dx < 0)
-			jog.Graphics.polygon(true, x1 - W / 2, y1, x2, y2 - W / 2, x3, y3 + W / 2);
-		else if (dy > 0)
-			jog.Graphics.polygon(true, x1, y1 + W / 2, x2 - W / 2, y2, x3 + W / 2, y3);
-		else if (dy < 0)
-			jog.Graphics.polygon(true, x1, y1 - W / 2, x2 - W / 2, y2, x3 + W / 2, y3);
+		jog.Graphics.setLineWidth(DataTile.TILE_SIZE / 2);
+		if (dx > 0) {
+			jog.Graphics.polygon(true, ox + W, oy, ox + W / 2, oy - W / 2, ox + W / 2, oy + W / 2);
+			jog.Graphics.line(ox, oy, ox + W / 2, oy);
+		} else if (dx < 0) {
+			jog.Graphics.polygon(true, ox - W, oy, ox - W / 2, oy - W / 2, ox - W / 2, oy + W / 2);
+			jog.Graphics.line(ox, oy, ox - W / 2, oy);
+		} else if (dy > 0) {
+			jog.Graphics.polygon(true, ox, oy + W, ox - W / 2, oy + W / 2, ox + W / 2, oy + W / 2);
+			jog.Graphics.line(ox, oy, ox, oy + W / 2);
+		} else if (dy < 0) {
+			jog.Graphics.polygon(true, ox, oy - W, ox - W / 2, oy - W / 2, ox + W / 2, oy - W / 2);
+			jog.Graphics.line(ox, oy, ox, oy - W / 2);
+		}
+		jog.Graphics.setLineWidth(1);
 	}
 
 	private void drawBuildingOptions() {
