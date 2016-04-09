@@ -24,6 +24,12 @@ public class Player {
 	
 	public boolean[][] getVisibleTiles() { return visibility; }
 	
+	public boolean canSee(int i, int j) {
+		if (j < 0 || j >= visibility.length) return false;
+		if (i < 0 || i >= visibility[j].length) return false;
+		return visibility[j][i];
+	}
+	
 	public Player(Faction faction, Map map) {
 		this.faction = faction;
 		units = new ArrayList<Unit>();
