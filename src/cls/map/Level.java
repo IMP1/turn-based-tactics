@@ -35,6 +35,7 @@ public class Level {
 		for (int i = 0; i < players.length; i ++) {
 			players[i] = new Player(data.factions[i], map);
 		}
+		Player.setFogOfWar(data.fogOfWar);
 	}
 	
 	public void begin() {
@@ -172,9 +173,9 @@ public class Level {
 	
 	public boolean[][] calculateUnitMoves(Unit u) {
 		if (!u.canMove()) return new boolean[0][0];
-		int max = u.getMoveDistance();
 		boolean[][] tiles = new boolean[map.getHeight()][map.getWidth()];
 		
+		int max = u.getMoveDistance();
 		addAvailableMovement(u, u.getX(), u.getY() - 1, max, tiles);
 		addAvailableMovement(u, u.getX() - 1, u.getY(), max, tiles);
 		addAvailableMovement(u, u.getX(), u.getY() + 1, max, tiles);
@@ -226,8 +227,36 @@ public class Level {
 		moveable[y][x] = true;
 	}
 	
-	public boolean[][] calculateUnitAttacks(Unit u) {
-		return new boolean[0][0];
+	public boolean[][] calculateUnitAttacks(Unit u, boolean[][] movements) {
+		boolean[][] tiles = new boolean[map.getHeight()][map.getWidth()];
+		if (u.canMoveAndAttack()) {
+			int maxRange = u.getMaximumRange();
+			for (int j = 0; j < movements.length; j ++) {
+				for (int i = 0; i < movements[j].length; i ++) {
+					if (movements[j][i]) setBlock(i, j, maxRange, true, tiles);
+				}
+			}
+		} else {
+			setBlock(u.getX(), u.getY(), u.getMaximumRange(), true, tiles);
+		}
+		setBlock(u.getX(), u.getY(), u.getMinimumRange(), false, tiles);
+		return tiles;
+	}
+	
+	private void setBlock(int ox, int oy, int size, boolean value, boolean[][] tiles) {
+		for (int i = -size; i <= size; i ++) {
+			int n = size - Math.abs(i);
+			for (int j = 0; j < n; j ++) {
+				setAttackable(ox + i, oy + j, tiles, value);
+				setAttackable(ox + i, oy - j, tiles, value);
+			}
+		}
+	}
+	
+	private void setAttackable(int x, int y, boolean[][] attacks, boolean attackable) {
+		if (y < 0 || y >= attacks.length) return;
+		if (x < 0 || x >= attacks[y].length) return;
+		attacks[y][x] = attackable;
 	}
 	
 	public void update(double dt) {
