@@ -186,10 +186,12 @@ public class Level {
 	private void addAvailableMovement(Unit unit, int x, int y, int distanceRemaining, boolean[][] moveable) {
 		if (distanceRemaining == 0) return;
 		if (map.getTileAt(x, y) == null) return;
-		Building b = getBuildingAt(x, y); 
-		if (b != null && b.getOwner() != unit.getOwner()) return;
-		Unit u = getUnitAt(x, y);
-		if (u != null && u.getOwner() != unit.getOwner()) return;
+		if (unit.getOwner().canSee(x, y)) {
+			Building b = getBuildingAt(x, y); 
+			if (b != null && b.getOwner() != unit.getOwner()) return;
+			Unit u = getUnitAt(x, y);
+			if (u != null && u.getOwner() != unit.getOwner()) return;
+		}
 		
 		setMoveableTo(x, y, moveable);
 		if (map.getTileAt(x, y - 1) != null) {
