@@ -126,7 +126,7 @@ public class Battle extends Scene {
 			hoveredBuilding = level.getBuildingAt(i, j);
 			hoveredTile = map.getTileAt(i, j);
 		}
-		if (selectedUnit != null && selectedUnit.canMove()) {
+		if (selectedUnit != null && !selectedUnit.isMoving() && selectedUnit.canMove()) {
 			updateSelectedUnitPath(i, j);
 		}
 		if (playingMovementAnimation) {
@@ -322,6 +322,11 @@ public class Battle extends Scene {
 		if (dx == 0 && dy == 0) return;
 		
 		/*
+		 * If the unit can't move there, don't do anything
+		 */
+		if (!selectedUnitMoves[y][x]) return;
+		
+		/*
 		 * If this tile is on the path, revert back to it.
 		 */
 		int tileOnPath = -1;
@@ -402,7 +407,21 @@ public class Battle extends Scene {
 		if (x != path[path.length-2] || y != path[path.length-1]) return;
 		System.out.printf("Moving Unit %s.\n", u.name);
 		for (int i = 0; i < path.length; i += 2) {
-			System.out.printf("\t(%d, %d)\n", i, i+1);
+			System.out.printf("\t(%d, %d)\n", path[i], path[i+1]);
+			Building blockingBuilding = level.getBuildingAt(path[i], path[i+1]);
+			if (blockingBuilding != null && blockingBuilding.getOwner() != level.getCurrentPlayer()) {
+				System.out.printf("\tBlocked by building!\n", path[i], path[i+1]);
+				path = Arrays.copyOf(path, i);
+				System.out.printf("\tStopping at (%d, %d).\n", path[i-2], path[i-1]);
+				break;
+			}
+			Unit blockingUnit = level.getUnitAt(path[i], path[i+1]);
+			if (blockingUnit != null && blockingUnit.getOwner() != level.getCurrentPlayer()) {
+				System.out.printf("\tBlocked by unit!\n", path[i], path[i+1]);
+				path = Arrays.copyOf(path, i);
+				System.out.printf("\tStopping at (%d, %d).\n", path[i-2], path[i-1]);
+				break;
+			}
 		}
 		u.move(path);
 		movingUnit = u;
