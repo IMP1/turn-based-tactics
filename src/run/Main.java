@@ -5,10 +5,7 @@ public class Main extends Game {
 	public static final int PATCH_NUMBER = 0;
 	public static final String VERSION = "0.0.0";
 
-	private static final String[] TITLE_BACKGROUNDS = new String[] {
-		"plane.png",
-		"tank.png",
-	};
+	private static final String[] TITLE_BACKGROUNDS = jog.Filesystem.enumerate("/gfx/title");
 	private static final String TITLE = "Battleground";
 	private static final int WIDTH = 800;
 	private static final int HEIGHT = 600;
