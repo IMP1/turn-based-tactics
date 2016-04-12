@@ -13,6 +13,12 @@ public class Player {
 		NIGHT_WALKERS,
 	}
 
+	private static boolean fogOfWarEnabled;
+
+	public static void setFogOfWar(boolean fogOfWar) {
+		fogOfWarEnabled = fogOfWar;
+	}
+		
 	public final Faction faction;
 	private ArrayList<Unit> units;
 	private boolean[][] visibility;
@@ -25,6 +31,7 @@ public class Player {
 	public boolean[][] getVisibleTiles() { return visibility; }
 	
 	public boolean canSee(int i, int j) {
+		if (!fogOfWarEnabled) return true;
 		if (j < 0 || j >= visibility.length) return false;
 		if (i < 0 || i >= visibility[j].length) return false;
 		return visibility[j][i];
@@ -69,6 +76,7 @@ public class Player {
 	}
 	
 	public void updateVisibility(Map map) {
+		if (!fogOfWarEnabled) return;
 		int mapHeight = visibility.length;
 		int mapWidth = visibility[0].length;
 		visibility = new boolean[mapWidth][mapHeight];
@@ -122,5 +130,5 @@ public class Player {
 	public void addUnit(Unit newUnit) {
 		units.add(newUnit);
 	}
-	
+
 }
