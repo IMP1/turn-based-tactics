@@ -85,6 +85,14 @@ public class Level {
 		return currentPlayer;
 	}
 
+	public boolean areAllies(Player p1, Player p2) {
+		return p1.equals(p2);
+	}
+	
+	public boolean areEnemies(Player p1, Player p2) {
+		return !p1.equals(p2);
+	}
+	
 	public boolean hasFogOfWar() {
 		return data.fogOfWar;
 	}
