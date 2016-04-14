@@ -1,5 +1,7 @@
 package cls.unit;
 
+import java.util.ArrayList;
+
 import run.Settings;
 import lib.Sprite;
 import cls.Player;
@@ -9,7 +11,7 @@ import cls.weapon.Weapon;
 
 public class Unit extends cls.GameObject {
 
-	private static final int MOVE_SPEED = DataTile.TILE_SIZE * 2; 
+	private static final int MOVE_SPEED = DataTile.TILE_SIZE * 3; 
 	
 	public enum Action {
 		MOVE,
@@ -45,20 +47,23 @@ public class Unit extends cls.GameObject {
 	public boolean  canMoveAndAttack()  { return data.canMoveAndAttack; }
 	public boolean  canMoveTwice()      { return false;                 } // TODO add this into unit data.
 	
-	private Player   owner;
-	private int      health;
-	private Weapon[] weapons;
-	private int      fuel;
-	private int      movesPerformed;
-	private boolean  isMoving;
-	private boolean  isExhausted;
-	private int[]    movePath;
-	private int      pathPosition;
-	private double   animationX;
-	private double   animationY;
-	private boolean  isDestroyed;
-	private Sprite   sprite;
-	private Sprite   icon;
+	private Player          owner;
+	private int             health;
+	private Weapon[]        weapons;
+	private int             fuel;
+	private int             movesPerformed;
+	private boolean         isMoving;
+	private boolean         isExhausted;
+	private int[]           movePath;
+	private int             pathPosition;
+	private double          animationX;
+	private double          animationY;
+	private boolean         isDestroyed;
+	private Sprite          sprite;
+	private Sprite          icon;
+	private int             spaceForUnits;
+	private ArrayList<Unit> storedUnits;
+	private boolean         isStored;
 	
 	public int     getFuel()     { return fuel;        }
 	public boolean isExhausted() { return isExhausted; }
@@ -81,6 +86,26 @@ public class Unit extends cls.GameObject {
 			if (w.getMaximumRange() < max) max = w.getMaximumRange();
 		}
 		return max;
+	}
+	
+	public boolean canStoreUnit(Unit u) {
+		if (spaceForUnits == 0) return false;
+		if (!data.unitStorage.containsKey(u.getUnitKind())) return false;
+		return data.unitStorage.get(u.getUnitKind()) <= spaceForUnits;
+	}
+	
+	public boolean tryStoreUnit(Unit u) {
+		if (canStoreUnit(u)) {
+			storedUnits.add(u);
+			u.isStored = true;
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public boolean isStored() {
+		return isStored;
 	}
 	
 	public boolean isMoving() {
@@ -116,6 +141,9 @@ public class Unit extends cls.GameObject {
 		isMoving = false;
 		movesPerformed = 0;
 		isExhausted = false;
+		spaceForUnits = data.totalSpace;
+		storedUnits = new ArrayList<Unit>();
+		isStored = false;
 	}
 	
 	@Override
@@ -276,6 +304,9 @@ public class Unit extends cls.GameObject {
 				jog.Graphics.draw(sprite, x * DataTile.TILE_SIZE, y * DataTile.TILE_SIZE, -1, 1, 0, DataTile.TILE_SIZE / 2, DataTile.TILE_SIZE / 2);
 			}
 		}
+	}
+	public void attack(Unit defender) {
+		
 	}
 	
 }
