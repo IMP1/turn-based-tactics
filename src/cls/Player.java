@@ -54,7 +54,7 @@ public class Player {
 	
 	public Unit getUnitAt(int i, int j) {
 		for (Unit u : units) {
-			if (u.isAt(i, j)) return u;
+			if (u.isAt(i, j) && !u.isStored()) return u;
 		}
 		return null;
 	}
@@ -71,7 +71,7 @@ public class Player {
 	
 	public void drawUnits() {
 		for (Unit u : units) {
-			u.draw();
+			if (!u.isStored()) u.draw();
 		}
 	}
 	
@@ -81,6 +81,7 @@ public class Player {
 		int mapWidth = visibility[0].length;
 		visibility = new boolean[mapWidth][mapHeight];
 		for (Unit u : units) {
+			if (u.isStored()) continue;
 			setVisible(u.getX(), u.getY(), visibility);
 			updateUnitVisibility(map, u.getX(), u.getY() - 1, u.getVisionDistance());
 			updateUnitVisibility(map, u.getX() - 1, u.getY(), u.getVisionDistance());
