@@ -23,6 +23,10 @@ import scn.Scene;
 
 public class Battle extends Scene {
 	
+	private static interface DelayedAction {
+		public void call();
+	}
+	
 	private final static int GUI_INFO_BOX_WIDTH = 96;
 	private final static int GUI_INFO_BOX_HEIGHT = 96;
 	private final static int GUI_ORDER_BOX_WIDTH = 128;
@@ -64,6 +68,7 @@ public class Battle extends Scene {
 	private boolean playingAttackAnimation;
 	private Animation turnAnimation;
 	private BattleAnimation attackAnimation;
+	private DelayedAction postMoveAction;
 	
 	// TODO: remove debugging constructor
 	public Battle() { this("Debug"); }
@@ -124,8 +129,9 @@ public class Battle extends Scene {
 				} else { selectUnit(null); }
 				movingUnit = null;
 				playingMovementAnimation = false;
-				if (playingAttackAnimation) {
-					attackAnimation.start();
+				if (postMoveAction != null) {
+					postMoveAction.call();
+					postMoveAction = null;
 				}
 			}
 		}
@@ -216,7 +222,9 @@ public class Battle extends Scene {
 			if (canSelectedUnitAttack(i, j)) {
 				attackWithUnit(selectedUnit, i, j, selectedUnitPath);
 			}
-			
+			if (canSelectedUnitLoad(i, j)) {
+				loadUnit(selectedUnit, i, j, selectedUnitPath);
+			}
 			if (canSelectedUnitMoveTo(i, j)) {
 				moveUnit(selectedUnit, i, j, selectedUnitPath);
 			}
@@ -273,18 +281,18 @@ public class Battle extends Scene {
 		
 	}
 	
-	private void attackWithUnit(Unit unit, int i, int j, int[] selectedUnitPath) {
+	private void attackWithUnit(Unit unit, int i, int j, int[] unitPath) {
 		// TODO add some indirect attackTile option maybe?
 		Unit defender = level.getUnitAt(i, j);
-		if (defender != null) {
+		if (defender != null && level.areEnemies(unit.getOwner(), defender.getOwner())) {
 			int x, y;
 			if (unit.canMoveAndAttack()) {
-				x = selectedUnitPath[selectedUnitPath.length - 2];
-				y = selectedUnitPath[selectedUnitPath.length - 1];
+				x = unitPath[unitPath.length - 2];
+				y = unitPath[unitPath.length - 1];
 				int distance = Math.abs(i - x) + Math.abs(j - y);
 				if (distance > unit.getMaximumRange()) return;
 //				if (distance < unit.getMinimumRange()) return;
-				moveUnit(unit, x, y, selectedUnitPath);
+				moveUnit(unit, x, y, unitPath);
 			} else {
 				x = unit.getX();
 				y = unit.getY();
@@ -292,19 +300,56 @@ public class Battle extends Scene {
 			System.out.printf("%s is attacking.\n", unit.name);
 			System.out.printf("%s is defending.\n", defender.name);
 			unit.attack(defender);
-			playingAttackAnimation = true;
+			postMoveAction = new DelayedAction() {
+				@Override
+				public void call() {
+					attackAnimation.start();
+					playingAttackAnimation = true;
+				}
+			};
 			attackAnimation = new BattleAnimation(map.getTileAt(x, y), map.getTileAt(defender.getX(), defender.getY()), unit, defender);
 		}
 	}
 
+	private void loadUnit(final Unit unit, final int i, final int j, final int[] unitPath) {
+		final Unit transport = level.getUnitAt(i, j);
+		if (transport != null) {
+			moveUnit(unit, i, j, unitPath);
+			postMoveAction = new DelayedAction() {
+				@Override
+				public void call() {
+					transport.tryStoreUnit(unit);
+					unit.getOwner().updateVisibility(map);
+				}
+			};
+			return;
+		}
+		final Building storage = level.getBuildingAt(i, j);
+		if (storage != null) {
+			moveUnit(unit, i, j, unitPath);
+			postMoveAction = new DelayedAction() {
+				@Override
+				public void call() {
+					storage.tryStoreUnit(unit);
+					unit.getOwner().updateVisibility(map);
+				}
+			};
+			return;
+		}
+	}
+	
 	public boolean canSelectedUnitMoveTo(int i, int j) {
-		if (selectedUnitMoves == null) return false;
-		if (j < 0 || j >= selectedUnitMoves.length) return false;
-		if (i < 0 || i >= selectedUnitMoves[j].length) return false;
 		if (level.getCurrentPlayer().canSee(i, j)) {
 			Unit u = level.getUnitAt(i, j);
 			if (u != null && u != selectedUnit) return false;
 		}
+		return canSelectedUnitGetTo(i, j);
+	}
+	
+	private boolean canSelectedUnitGetTo(int i, int j) {
+		if (selectedUnitMoves == null) return false;
+		if (j < 0 || j >= selectedUnitMoves.length) return false;
+		if (i < 0 || i >= selectedUnitMoves[j].length) return false;
 		return selectedUnitMoves[j][i];
 	}
 	
@@ -315,6 +360,22 @@ public class Battle extends Scene {
 		return selectedUnitAttacks[j][i];
 	}
 	
+	public boolean canSelectedUnitBuild(Building b, int i, int j) { 
+		return false; // TODO implement building checks
+	}
+	
+	public boolean canSelectedUnitLoad(int i, int j) {
+		if (!canSelectedUnitGetTo(i, j)) return false;
+		Unit transport = level.getUnitAt(i, j);
+		if (transport != null) {
+			if (transport.canStoreUnit(selectedUnit)) return true;
+		}
+		Building bunker = level.getBuildingAt(i, j);
+		if (bunker != null) {
+			if (bunker.canStoreUnit(selectedUnit)) return true;
+		}
+		return false;
+	}
 	
 	private void selectBuilding(Building b) {
 		selectedBuilding = b;
@@ -579,7 +640,13 @@ public class Battle extends Scene {
 		}
 		for (int j = 0; j < attacks.length; j ++) {
 			for (int i = 0; i < attacks[j].length; i ++) {
-				if (attacks[j][i]) {
+				boolean isMove = false;
+				if (j >= 0 && j < moves.length) {
+					if (i >= 0 && i < moves[j].length) {
+						isMove = moves[j][i];
+					}
+				}
+				if (attacks[j][i] && !isMove) {
 					jog.Graphics.setColour(255, 64, 64, opacity);
 					jog.Graphics.rectangle(true, i * DataTile.TILE_SIZE, j * DataTile.TILE_SIZE, DataTile.TILE_SIZE, DataTile.TILE_SIZE);
 				}
