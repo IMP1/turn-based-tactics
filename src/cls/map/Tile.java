@@ -4,6 +4,7 @@ import cls.unit.Unit;
 
 public final class Tile {
 	
+	public final String name;
 	private DataTile data;
 	
 	public int getDefenceBonus(Unit u) {
@@ -27,6 +28,7 @@ public final class Tile {
 	
 	protected Tile(DataTile data) {
 		this.data = data;
+		this.name = data.name;
 	}
 	
 	public void update(double dt) {
