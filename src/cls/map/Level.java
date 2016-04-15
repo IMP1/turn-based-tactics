@@ -15,6 +15,7 @@ public class Level {
 	private Player[] players;
 	private ArrayList<Building> buildings;
 	private int currentPlayer;
+	private int turnCount;
 	private Map map;
 	
 	public Building getBuildingAt(int i, int j) {
@@ -43,6 +44,7 @@ public class Level {
 		createInitialBuildings();
 		for (Player p : players) p.updateVisibility(map);
 		currentPlayer = -1;
+		turnCount = -1;
 		nextTurn();
 	}
 	
@@ -97,6 +99,14 @@ public class Level {
 		return data.fogOfWar;
 	}
 
+	public int getTurnCount() {
+		return turnCount;
+	}
+	
+	public int getTurn() {
+		return 1 + getTurnCount() / players.length;
+	}
+	
 	public Unit getUnitAt(int i, int j) {
 		for (Player p : players) {
 			Unit u = p.getUnitAt(i, j);
@@ -106,6 +116,7 @@ public class Level {
 	}
 
 	public void nextTurn() {
+		turnCount ++;
 		currentPlayer ++;
 		currentPlayer %= players.length;
 		players[currentPlayer].beginTurn();
