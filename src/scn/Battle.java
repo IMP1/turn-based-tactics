@@ -10,7 +10,7 @@ import jog.Graphics.Canvas;
 import lib.Animation;
 import lib.Camera;
 import cls.building.Building;
-import cls.map.BattleAnimation;
+import cls.map.UnitBattle;
 import cls.map.DataTile;
 import cls.map.Level;
 import cls.map.Map;
@@ -67,7 +67,7 @@ public class Battle extends Scene {
 	private boolean playingMovementAnimation;
 	private boolean playingAttackAnimation;
 	private Animation turnAnimation;
-	private BattleAnimation attackAnimation;
+	private UnitBattle attackAnimation;
 	private DelayedAction postMoveAction;
 	
 	// TODO: remove debugging constructor
@@ -185,6 +185,11 @@ public class Battle extends Scene {
 		if (key == KeyEvent.VK_ESCAPE) {
 			selectedUnit = null;
 			selectedBuilding = null;
+		}
+		if (key == KeyEvent.VK_ENTER) {
+			level.nextTurn(); 
+			// TODO have AI do stuff
+			level.nextTurn(); // This just reverts back to our turn for now.
 		}
 		if (selectedUnit != null) {
 			if (key == KeyEvent.VK_M) {
@@ -307,7 +312,7 @@ public class Battle extends Scene {
 					playingAttackAnimation = true;
 				}
 			};
-			attackAnimation = new BattleAnimation(map.getTileAt(x, y), map.getTileAt(defender.getX(), defender.getY()), unit, defender);
+			attackAnimation = new UnitBattle(map.getTileAt(x, y), map.getTileAt(defender.getX(), defender.getY()), unit, defender);
 		}
 	}
 
@@ -706,10 +711,12 @@ public class Battle extends Scene {
 	
 	// TODO remove
 	private void drawDebug() {
+		jog.Graphics.setColour(0, 0, 0);
 		if (selectedAction != null)
 			jog.Graphics.print(selectedAction.toString(), 0, 0);
 		if (selectedUnitPath != null && selectedUnit != null)
 			jog.Graphics.print(String.valueOf(selectedPathDistance) + " / " + selectedUnit.getMoveDistance(), 0, 16);
+		jog.Graphics.print(String.valueOf(level.getTurn()), 0, 32);
 	}
 
 }
