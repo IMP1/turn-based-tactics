@@ -7,6 +7,7 @@ import cls.Player;
 import cls.building.Building;
 import cls.unit.DataUnit;
 import cls.unit.Unit;
+import cls.unit.Unit.Action;
 
 public class Level {
 
@@ -124,6 +125,27 @@ public class Level {
 
 	public boolean[][] getVisibleTiles() {
 		return players[currentPlayer].getVisibleTiles();
+	}
+	
+	public Action[] getAvailableActions(Unit unit, int x, int y) {
+		ArrayList<Action> list = new ArrayList<Action>();
+		if (unit.canAttack()) list.add(Action.DEFEND);
+		if (unit.canAttack()) list.add(Action.ATTACK);
+		if (unit.canBuild()) list.add(Action.BUILD);
+		
+		if (unit.isCarringUnits()) list.add(Action.UNLOAD);
+		
+		Unit u = getUnitAt(x, y);
+		if (u != null && u != unit && u.canStoreUnit(unit)) {
+			list.add(Action.LOAD);
+		} else {
+			Building b = getBuildingAt(x, y);
+			if (b != null && b.canStoreUnit(unit)) {
+				list.add(Action.LOAD);
+			}
+		}
+		
+		return list.toArray(new Action[0]);
 	}
 	
 	public int[] getPathTo(final Unit u, final int targetX, final int targetY, final int[] previousPath, final int distanceRemaining) {
