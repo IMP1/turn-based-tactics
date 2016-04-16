@@ -19,6 +19,7 @@ public class Unit extends cls.GameObject {
 		BUILD,
 		DEFEND,
 		LOAD,
+		UNLOAD,
 	}
 	
 	public enum Kind {
@@ -88,16 +89,32 @@ public class Unit extends cls.GameObject {
 		return max;
 	}
 	
+	public boolean canAttack() {
+		for (Weapon w : weapons) {
+			if (w.getAmmo() > 0) return true;
+		}
+		return false;
+	}
+	
+	public boolean canBuild() {
+		return data.buildableBuildings.length > 0;
+	}
+
 	public boolean canStoreUnit(Unit u) {
 		if (spaceForUnits == 0) return false;
 		if (!data.unitStorage.containsKey(u.getUnitKind())) return false;
 		return data.unitStorage.get(u.getUnitKind()) <= spaceForUnits;
 	}
 	
+	public boolean isCarringUnits() {
+		return storedUnits.size() > 0;
+	}
+
 	public boolean tryStoreUnit(Unit u) {
 		if (canStoreUnit(u)) {
 			storedUnits.add(u);
 			u.isStored = true;
+			spaceForUnits -= data.unitStorage.get(u.getUnitKind());
 			return true;
 		} else {
 			return false;
