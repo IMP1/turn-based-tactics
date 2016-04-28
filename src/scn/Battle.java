@@ -21,8 +21,44 @@ import cls.unit.Unit.Action;
 import run.Data;
 import run.Settings;
 import scn.Scene;
+import scn.battleState.SelectedUnit;
 
 public class Battle extends Scene {
+	
+	public static abstract class State {
+
+		protected final scn.Battle scene;
+		protected final cls.map.Level level;
+		protected final cls.map.Map map;
+		
+		public State(scn.Battle scene) {
+			this.scene = scene;
+			this.level = scene.level;
+			this.map = scene.map;
+		}
+		
+		public abstract void mouseClick(int x, int y, int i, int j);
+		public abstract void cancel();
+		public abstract void drawMap();
+		public abstract void drawScreen();
+		
+		protected void setSelectedUnit(Unit u) {
+			scene.selectUnit(u);
+		}
+		
+		protected void setNextState(State s) {
+			scene.nextState = s;
+		}
+		
+		protected void setAction(int i) {
+			scene.selectedAction = scene.selectedUnitPossibleActions[i];
+		}
+		
+		protected void showPossibleActions() {
+			scene.showSelectedUnitPossibleActions();
+		}
+		
+	}
 	
 	private static interface DelayedAction {
 		public void call();
@@ -43,6 +79,7 @@ public class Battle extends Scene {
 	private Canvas fogCanvas;
 	private Canvas objectCanvas;
 	
+	// TODO move the following into State, and make them static.
 	private Unit selectedUnit;
 	private Action selectedAction;
 	private boolean[][] selectedUnitMoves;
@@ -51,18 +88,16 @@ public class Battle extends Scene {
 	private int[] selectedUnitPath;
 	private int selectedPathDistance;
 	private boolean[][] selectedUnitAttacks;
-	
-	private Unit movingUnit;
-	
 	private Building selectedBuilding;
 	
 	private Unit hoveredUnit;
 	private boolean[][] hoveredUnitMoves;
 	private boolean[][] hoveredUnitAttacks;
-	
 	private Building hoveredBuilding;
-	
 	private Tile hoveredTile;
+
+	private Unit movingUnit;
+	
 	private String levelName;
 	private Level level;
 	private Map map;
@@ -74,6 +109,8 @@ public class Battle extends Scene {
 	private Animation turnAnimation;
 	private UnitBattle attackAnimation;
 	private DelayedAction postMoveAction;
+	private State inputState;
+	private State nextState;
 	
 	// TODO: remove debugging constructor
 	public Battle() { this("Debug"); }
@@ -100,6 +137,8 @@ public class Battle extends Scene {
 			fogCanvas = jog.Graphics.newCanvas(w, h);
 			objectCanvas = jog.Graphics.newCanvas(w, h);
 		}
+		inputState = new scn.battleState.Idle(this);
+		nextState = null;
 		level.begin();
 		playTurnAnimation();
 	}
@@ -162,6 +201,10 @@ public class Battle extends Scene {
 			dx += dt * CAMERA_SCROLL_SPEED;
 		}
 		camera.move(dx, dy);
+		if (nextState != null) {
+			inputState = nextState;
+			nextState = null;
+		}
 	}
 	
 	private void updateMouseInput() {
@@ -221,9 +264,11 @@ public class Battle extends Scene {
 		int tileX = map.tileX(camera.getWorldX(mouseX));
 		int tileY = map.tileY(camera.getWorldY(mouseY));
 		if (mouseKey == MouseEvent.BUTTON1) {
-			mouseClick(tileX, tileY);
+			inputState.mouseClick(mouseX, mouseY, tileX, tileY);
+//			mouseClick(tileX, tileY);
 		} else if (mouseKey == MouseEvent.BUTTON3) {
-			smartAction(tileX, tileY);
+			inputState.cancel();
+//			smartAction(tileX, tileY);
 		}
 	}
 	
@@ -255,6 +300,7 @@ public class Battle extends Scene {
 		System.out.println(selectedUnit);
 		System.out.println(selectedAction);
 		
+		
 		if (selectedUnit != null && selectedAction != null) {
 			switch (selectedAction) {
 			case MOVE:
@@ -275,6 +321,9 @@ public class Battle extends Scene {
 			case LOAD:
 				break;
 			case UNLOAD:
+				if (canSelectedUnitUnload(i, j)) {
+					
+				}
 				break;
 			default:
 				break;
@@ -289,9 +338,8 @@ public class Battle extends Scene {
 				System.out.println("Selecting Action");
 				// TODO get action being clicked on
 				selectedAction = selectedUnitPossibleActions[action];
-			} else {
-				showSelectedUnitActions = false;
 			}
+			showSelectedUnitActions = false;
 			return;
 		}
 		
@@ -320,10 +368,10 @@ public class Battle extends Scene {
 		}
 	}
 	
-	private int getClickedAction() {
+	public int getClickedAction() {
 		return getClickedAction(jog.Input.getMouseX(), jog.Input.getMouseY());
 	}
-	private int getClickedAction(int mx, int my) {
+	public int getClickedAction(int mx, int my) {
 		if (!showSelectedUnitActions) return -1;
 		if (selectedUnitPossibleActions.length == 0) return -1;
 		int x = (int)camera.getWorldX(mx);
@@ -418,7 +466,7 @@ public class Battle extends Scene {
 		return canSelectedUnitGetTo(i, j);
 	}
 	
-	private boolean canSelectedUnitGetTo(int i, int j) {
+	public boolean canSelectedUnitGetTo(int i, int j) {
 		if (selectedUnitMoves == null) return false;
 		if (j < 0 || j >= selectedUnitMoves.length) return false;
 		if (i < 0 || i >= selectedUnitMoves[j].length) return false;
@@ -447,6 +495,18 @@ public class Battle extends Scene {
 			if (bunker.canStoreUnit(selectedUnit)) return true;
 		}
 		return false;
+	}
+	
+	public boolean canSelectedUnitUnload(int i, int j) {
+		int x, y;
+		if (selectedUnitPath != null && selectedUnitPath.length >= 2) {
+			x = selectedUnitPath[selectedUnitPath.length - 2];
+			y = selectedUnitPath[selectedUnitPath.length - 1];
+		} else {
+			x = selectedUnit.getX();
+			y = selectedUnit.getY();
+		}
+		return Math.abs(i - x) + Math.abs(j - y) == 1;
 	}
 	
 	private void selectBuilding(Building b) {
@@ -602,21 +662,23 @@ public class Battle extends Scene {
 			level.drawBuildings();
 			level.drawUnits();
 			if (fogOfWar) hideFog();
-			if (selectedUnit != null) {
-				if (!playingMovementAnimation || movingUnit != selectedUnit) {
-					drawSelectedUnitOptions();
-				}
-				if (showSelectedUnitActions) {
-					drawActionWheel();
-				}
-			}
+			inputState.drawMap();
+//			if (selectedUnit != null) {
+//				if (!playingMovementAnimation || movingUnit != selectedUnit) {
+//					drawSelectedUnitOptions();
+//				}
+//				if (showSelectedUnitActions) {
+//					drawActionWheel();
+//				}
+//			}
 			if (hoveredUnit != null && hoveredUnit != selectedUnit) {
 				drawHoveredUnitOptions();
 			}
 		camera.unset();
 		drawTileGUI();
 		drawUnitGUI();
-		if (selectedBuilding != null) drawBuildingOptions();
+		inputState.drawScreen();
+//		if (selectedBuilding != null) drawBuildingOptions();
 		if (playingTurnAnimation) jog.Graphics.draw(turnAnimation, 0, 0);
 		if (playingAttackAnimation) drawAttack();
 		drawDebug();
@@ -709,7 +771,7 @@ public class Battle extends Scene {
 		// TODO Draw Orders, and currently selected one
 	}
 	
-	private void drawActionWheel() {
+	public void drawActionWheel() {
 		int x = selectedUnitPath[selectedUnitPath.length-2];
 		int y = selectedUnitPath[selectedUnitPath.length-1];
 		int n = selectedUnitPossibleActions.length;
@@ -728,13 +790,13 @@ public class Battle extends Scene {
 		}
 	}
 	
-	private void drawSelectedUnitOptions() {
+	public void drawSelectedUnitOptions() {
 		drawMoveAndAttack(selectedUnitMoves, selectedUnitAttacks, 96);
 		drawSelectedUnitPath();
 		selectedUnit.draw();
 	}
 	
-	private void drawHoveredUnitOptions() {
+	public void drawHoveredUnitOptions() {
 		drawMoveAndAttack(hoveredUnitMoves, hoveredUnitAttacks, 32);
 	}
 	
@@ -801,7 +863,7 @@ public class Battle extends Scene {
 		jog.Graphics.setLineWidth(1);
 	}
 
-	private void drawBuildingOptions() {
+	public void drawBuildingOptions() {
 		
 	}
 
