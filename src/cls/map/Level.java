@@ -145,6 +145,8 @@ public class Level {
 			}
 		}
 		
+		list.add(Action.MOVE);
+		
 		return list.toArray(new Action[0]);
 	}
 	
