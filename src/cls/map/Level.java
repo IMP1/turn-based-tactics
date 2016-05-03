@@ -3,8 +3,6 @@ package cls.map;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import scn.battleState.SelectedUnit;
-
 import cls.Player;
 import cls.building.Building;
 import cls.unit.DataUnit;
@@ -129,27 +127,37 @@ public class Level {
 		return players[currentPlayer].getVisibleTiles();
 	}
 	
-	public Action[] getAvailableActions(Unit unit, int x, int y) {
+	public Action[] getAvailableActions(final Unit unit, final int x, final int y) {
+		final Unit u = getUnitAt(x, y);
+		final Building b = getBuildingAt(x, y);
 		ArrayList<Action> list = new ArrayList<Action>();
-		if (unit.canAttack()) list.add(Action.DEFEND);
-		if (unit.canAttack()) list.add(Action.ATTACK);
-		if (unit.canBuild()) list.add(Action.BUILD);
+		
+		if (b == null && u == null) { 
+			if (unit.canAttack()) list.add(Action.DEFEND);
+			if (unit.canAttack()) list.add(Action.ATTACK);
+			if (unit.canBuild()) list.add(Action.BUILD);
+		}
 		
 		if (unit.isCarringUnits()) list.add(Action.UNLOAD);
 		
-		Unit u = getUnitAt(x, y);
 		if (u != null && u != unit && u.canStoreUnit(unit)) {
 			list.add(Action.LOAD);
 		} else {
-			Building b = getBuildingAt(x, y);
 			if (b != null && b.canStoreUnit(unit)) {
 				list.add(Action.LOAD);
 			}
 		}
 		
-		list.add(Action.MOVE);
+		if (canUnitMoveTo(unit, x, y)) list.add(Action.MOVE);
 		
 		return list.toArray(new Action[0]);
+	}
+	
+	private boolean canUnitMoveTo(Unit u, int x, int y) {
+		if (!u.canMove()) return false;
+		Unit obstacle = getUnitAt(x, y); 
+		if (obstacle != null && obstacle != u) return false;
+		return true;
 	}
 	
 	public int[] getPathTo(final Unit u, final int targetX, final int targetY, final int[] previousPath, final int distanceRemaining) {
