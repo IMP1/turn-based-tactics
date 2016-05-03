@@ -106,11 +106,15 @@ public class Unit extends cls.GameObject {
 		return data.unitStorage.get(u.getUnitKind()) <= spaceForUnits;
 	}
 	
+	public Unit[] getStoredUnits() {
+		return storedUnits.toArray(new Unit[0]);
+	}
+	
 	public boolean isCarringUnits() {
 		return storedUnits.size() > 0;
 	}
 
-	public boolean tryStoreUnit(Unit u) {
+	public boolean tryLoadUnit(Unit u) {
 		if (canStoreUnit(u)) {
 			storedUnits.add(u);
 			u.isStored = true;
@@ -119,6 +123,13 @@ public class Unit extends cls.GameObject {
 		} else {
 			return false;
 		}
+	}
+	
+	public void unloadUnit(Unit u, int x, int y) {
+		u.isStored = false;
+		u.setPosition(x, y);
+		storedUnits.remove(u);
+		spaceForUnits += data.unitStorage.get(u.getUnitKind());
 	}
 	
 	public boolean isStored() {
@@ -137,11 +148,14 @@ public class Unit extends cls.GameObject {
 		}
 	}
 	
+	public boolean isCarrying(Unit u) {
+		return storedUnits.contains(u);
+	}
+	
 	protected Unit(Player owner, int x, int y, DataUnit data) {
 		super(data.name);
 		this.owner = owner;
-		this.x = x;
-		this.y = y;
+		setPosition(x, y);
 		this.data = data;
 		// Create Weapon instances
 		weapons = new Weapon[data.weapons.length];
@@ -161,6 +175,11 @@ public class Unit extends cls.GameObject {
 		spaceForUnits = data.totalSpace;
 		storedUnits = new ArrayList<Unit>();
 		isStored = false;
+	}
+	
+	protected void setPosition(int x, int y) {
+		this.x = x;
+		this.y = y;
 	}
 	
 	@Override
@@ -235,7 +254,6 @@ public class Unit extends cls.GameObject {
 			nextPathPoint();
 			return;
 		}
-			
 	}
 	
 	private void nextPathPoint() {

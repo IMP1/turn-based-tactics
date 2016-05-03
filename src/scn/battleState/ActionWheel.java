@@ -45,7 +45,9 @@ public class ActionWheel extends State {
 				}
 				return;
 			case UNLOAD:
-				break;
+				showUnloadableUnits();
+				setNextState(new Unload(scene));
+				return;
 			default:
 				break;
 			}
