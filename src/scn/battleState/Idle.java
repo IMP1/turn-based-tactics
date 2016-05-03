@@ -1,5 +1,6 @@
 package scn.battleState;
 
+import cls.building.Building;
 import cls.unit.Unit;
 import scn.Battle;
 
@@ -15,6 +16,13 @@ public class Idle extends Battle.State {
 		if (u != null) {
 			setSelectedUnit(u);
 			setNextState(new SelectedUnit(scene));
+			return;
+		}
+		Building b = level.getBuildingAt(i, j);
+		if (b != null) {
+			setSelectedBuidling(b);
+			setNextState(new SelectedBuilding(scene));
+			return;
 		}
 	}
 

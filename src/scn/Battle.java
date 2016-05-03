@@ -21,7 +21,6 @@ import cls.unit.Unit.Action;
 import run.Data;
 import run.Settings;
 import scn.Scene;
-import scn.battleState.SelectedUnit;
 
 public class Battle extends Scene {
 	
@@ -46,16 +45,46 @@ public class Battle extends Scene {
 			scene.selectUnit(u);
 		}
 		
+		protected void setSelectedBuidling(Building b) {
+			scene.selectBuilding(b);
+		}
+		
 		protected void setNextState(State s) {
 			scene.nextState = s;
+		}
+		
+		protected void unsetAction() {
+			scene.selectedAction = null;
 		}
 		
 		protected void setAction(int i) {
 			scene.selectedAction = scene.selectedUnitPossibleActions[i];
 		}
 		
-		protected void showPossibleActions() {
+		protected void showActionWheel() {
 			scene.showSelectedUnitPossibleActions();
+		}
+		
+		protected void hideActionWheel() {
+			scene.hideSelectedUnitPossibleActions();
+		}
+		
+		protected void moveSelectedUnit() {
+			int[] pos = scene.getSelectedPosition();
+			int i = pos[0];
+			int j = pos[1];
+			scene.moveUnit(scene.selectedUnit, i, j, scene.selectedUnitPath);
+		}
+		
+		protected void attack(int i, int j) {
+			scene.attackWithUnit(scene.selectedUnit, i, j, scene.selectedUnitPath);
+		}
+		
+		protected void loadSelectedUnit() {
+			int[] pos = scene.getSelectedPosition();
+			int i = pos[0];
+			int j = pos[1];
+			scene.loadUnit(scene.selectedUnit, i, j, scene.selectedUnitPath);
 		}
 		
 	}
@@ -128,7 +157,6 @@ public class Battle extends Scene {
 		hoveredBuilding = null;
 		hoveredTile = null;
 		selectedUnit = null;
-//		movingUnit = null;
 		selectedBuilding = null;
 		camera = new Camera(0, 0, map.getWidth() * DataTile.TILE_SIZE, map.getHeight() * DataTile.TILE_SIZE);
 		if (fogOfWar) {
@@ -271,7 +299,7 @@ public class Battle extends Scene {
 //			smartAction(tileX, tileY);
 		}
 	}
-	
+	/*
 	private void smartAction(int i, int j) {
 		System.out.printf("Mouse smart clicked on (%d, %d).\n", i, j);
 		if (selectedUnit != null) {
@@ -367,7 +395,7 @@ public class Battle extends Scene {
 			selectedUnit = null;
 		}
 	}
-	
+	*/
 	public int getClickedAction() {
 		return getClickedAction(jog.Input.getMouseX(), jog.Input.getMouseY());
 	}
@@ -391,11 +419,19 @@ public class Battle extends Scene {
 		return -1;
 	}
 	
+	public Action getSelectedAction() {
+		return selectedAction;
+	}
+	
 	private void showSelectedUnitPossibleActions() {
 		showSelectedUnitActions = true;
 		int x = selectedUnitPath[selectedUnitPath.length - 2];
 		int y = selectedUnitPath[selectedUnitPath.length - 1];
 		selectedUnitPossibleActions = level.getAvailableActions(selectedUnit, x, y);
+	}
+	
+	private void hideSelectedUnitPossibleActions() {
+		showSelectedUnitActions = false;
 	}
 	
 	private boolean attackWithUnit(Unit unit, int i, int j, int[] unitPath) {
@@ -456,6 +492,18 @@ public class Battle extends Scene {
 			return true;
 		}
 		return false;
+	}
+	
+	private int[] getSelectedPosition() {
+		int i, j;
+		if (selectedUnitPath.length >= 2) {
+			i = selectedUnitPath[selectedUnitPath.length - 2];
+			j = selectedUnitPath[selectedUnitPath.length - 1];
+		} else {
+			i = selectedUnit.getX();
+			j = selectedUnit.getY();
+		}
+		return new int[] { i, j };
 	}
 	
 	public boolean canSelectedUnitMoveTo(int i, int j) {
@@ -533,7 +581,11 @@ public class Battle extends Scene {
 			showSelectedUnitActions = false;
 		}
 	}
-	
+
+	public Unit getSelectedUnit() {
+		return selectedUnit;
+	}
+
 	private void updateSelectedUnitPath(final int x, final int y) {
 		final int lastX = selectedUnitPath[selectedUnitPath.length - 2];
 		final int lastY = selectedUnitPath[selectedUnitPath.length - 1];
@@ -770,8 +822,11 @@ public class Battle extends Scene {
 		}
 		// TODO Draw Orders, and currently selected one
 	}
-	
+
 	public void drawActionWheel() {
+		drawActionWheel(null);
+	}
+	public void drawActionWheel(Unit.Action selectedAction) {
 		int x = selectedUnitPath[selectedUnitPath.length-2];
 		int y = selectedUnitPath[selectedUnitPath.length-1];
 		int n = selectedUnitPossibleActions.length;
@@ -786,7 +841,34 @@ public class Battle extends Scene {
 			jog.Graphics.circle(true, actionX, actionY, 16);
 			jog.Graphics.setColour(0, 0, 0);
 			jog.Graphics.circle(false, actionX, actionY, 16);
-			jog.Graphics.printCentred(selectedUnitPossibleActions[i].toString().substring(0, 1), actionX, actionY);
+			Action a = selectedUnitPossibleActions[i];
+			if (a == selectedAction) {
+				jog.Graphics.printCentred("✓", actionX, actionY);
+			} else {
+				jog.Graphics.printCentred(a.toString().substring(0, 1), actionX, actionY);
+			}
+		}
+	}
+
+	public void drawAttackableUnits() {
+		drawAttackableUnits(null);
+	}
+	public void drawAttackableUnits(Unit target) {
+		int[] pos = getSelectedPosition();
+		int x = pos[0];
+		int y = pos[1];
+		for (int j = y - selectedUnit.getMaximumRange(); j < y + selectedUnit.getMaximumRange(); j ++) {
+			for (int i = x - selectedUnit.getMaximumRange(); i < x + selectedUnit.getMaximumRange(); i ++) {
+				Unit u = level.getUnitAt(i, j);
+				if (u == null) continue;
+				if (u == target) {
+					jog.Graphics.setColour(255, 255, 255);
+					jog.Graphics.rectangle(false, i * DataTile.TILE_SIZE, j * DataTile.TILE_SIZE, DataTile.TILE_SIZE, DataTile.TILE_SIZE);
+				} else if (level.areEnemies(selectedUnit.getOwner(), u.getOwner())) {
+					jog.Graphics.setColour(255, 0, 0);
+					jog.Graphics.rectangle(false, i * DataTile.TILE_SIZE, j * DataTile.TILE_SIZE, DataTile.TILE_SIZE, DataTile.TILE_SIZE);
+				}
+			}
 		}
 	}
 	

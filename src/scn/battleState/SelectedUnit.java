@@ -12,8 +12,8 @@ public class SelectedUnit extends State {
 	@Override
 	public void mouseClick(int x, int y, int i, int j) {
 		if (scene.canSelectedUnitGetTo(i, j)) {
-			setNextState(new SelectedLocation(scene));
-			showPossibleActions();
+			setNextState(new ActionWheel(scene));
+			showActionWheel();
 		}
 	}
 	
