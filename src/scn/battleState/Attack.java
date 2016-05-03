@@ -40,7 +40,7 @@ public class Attack extends State {
 
 	@Override
 	public void drawScreen() {
-		
+		if (target != null)	scene.drawAttackInfo(target);
 	}
 
 }
