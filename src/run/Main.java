@@ -12,6 +12,12 @@ public class Main extends Game {
 	
 	public static jog.Image titleBackground;
 	
+	static {
+		// DEBUGGING CODE
+		Settings.askConfirmationOnMove = false;
+		Settings.askConfirmationOnLoad = false;
+	}
+	
 	public Main() {
 		super(new scn.Title(titleBackground), TITLE, WIDTH, HEIGHT);
 	}
