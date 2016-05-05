@@ -138,7 +138,7 @@ public class Level {
 			if (unit.canAttack()) list.add(Action.ATTACK);
 			if (unit.canBuild()) list.add(Action.BUILD);
 			if (unit.canMove()) list.add(Action.MOVE);
-			if (unit.isCarringUnits() && canUnitUnloadAt(unit, x, y))
+			if (unit.isCarringUnits() && canUnitUnloadAt(x, y))
 				list.add(Action.UNLOAD);
 		} else {			
 			if (u != null && u != unit && u.canStoreUnit(unit)) {
@@ -151,7 +151,7 @@ public class Level {
 		return list.toArray(new Action[0]);
 	}
 	
-	private boolean canUnitUnloadAt(Unit u, int x, int y) {
+	private boolean canUnitUnloadAt(int x, int y) {
 		if (x > 0 && getUnitAt(x - 1, y) == null) return true;
 		if (y > 0 && getUnitAt(x, y - 1) == null) return true;
 		if (x < map.getWidth() - 1 && getUnitAt(x + 1, y) == null) return true;
