@@ -54,7 +54,6 @@ public class Unit extends cls.GameObject {
 	private int             fuel;
 	private int             movesPerformed;
 	private boolean         isMoving;
-	private boolean         isExhausted;
 	private int[]           movePath;
 	private int             pathPosition;
 	private double          animationX;
@@ -67,7 +66,6 @@ public class Unit extends cls.GameObject {
 	private boolean         isStored;
 	
 	public int     getFuel()     { return fuel;        }
-	public boolean isExhausted() { return isExhausted; }
 	public Player  getOwner()    { return owner;       }
 	public int     getHealth()   { return health;      }
 	public boolean isDestroyed() { return isDestroyed; }
@@ -171,7 +169,6 @@ public class Unit extends cls.GameObject {
 		isDestroyed = false;
 		isMoving = false;
 		movesPerformed = 0;
-		isExhausted = false;
 		spaceForUnits = data.totalSpace;
 		storedUnits = new ArrayList<Unit>();
 		isStored = false;
@@ -185,7 +182,6 @@ public class Unit extends cls.GameObject {
 	@Override
 	public void refresh() {
 		fuel -= data.fuelCost;
-		isExhausted = false;
 		movesPerformed = 0;
 	}
 	
@@ -226,6 +222,10 @@ public class Unit extends cls.GameObject {
 		if (!Settings.showMoveAnimations) {
 			while (isMoving) nextPathPoint();
 		}
+	}
+
+	public void attack(Unit defender) {
+		
 	}
 	
 	@Override
@@ -340,8 +340,5 @@ public class Unit extends cls.GameObject {
 			}
 		}
 	}
-	public void attack(Unit defender) {
-		
-	}
-	
+
 }
