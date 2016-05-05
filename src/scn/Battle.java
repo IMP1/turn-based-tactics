@@ -81,6 +81,16 @@ public class Battle extends Scene {
 			scene.hideUnloadableUnits();
 		}
 		
+		protected void showDefendableDirections() {
+			// TODO have a method for this?
+			scene.showDefendDirection = true;
+		}
+		
+		protected void hideDefendableDirections() {
+			// TODO have a method for this?
+			scene.showDefendDirection = false;
+		}
+		
 		protected void moveSelectedUnit() {
 			int[] pos = scene.getSelectedPosition();
 			int i = pos[0];
@@ -140,6 +150,8 @@ public class Battle extends Scene {
 	private boolean showUnloadableUnits;
 	private Unit[] unloadableUnits;
 	private Unit unitToUnload;
+	private boolean showDefendDirection;
+	private int defendDirectionArc;
 	
 	private Unit hoveredUnit;
 	private boolean[][] hoveredUnitMoves;
@@ -276,6 +288,13 @@ public class Battle extends Scene {
 					selectedUnit.canMove() && !showSelectedUnitActions) {
 				updateSelectedUnitPath(i, j);
 			}
+		}
+		if (showDefendDirection) {
+			int[] pos = getSelectedPosition();
+			int x = pos[0]; 
+			int y = pos[1];
+			double r = Math.atan2(j - y, i - x);
+			defendDirectionArc = (int)(r * 4 / Math.PI);
 		}
 	}
 	
@@ -927,6 +946,12 @@ public class Battle extends Scene {
 				jog.Graphics.printCentred(a.toString().substring(0, 1), actionX, actionY);
 			}
 		}
+	}
+	
+	public void drawDefendDirections() {
+		// TODO draw an arc based on either the mouse position
+		// or a variable set in the update.
+		defendDirectionArc
 	}
 
 	public void drawAttackableUnits() {

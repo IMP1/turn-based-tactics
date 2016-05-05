@@ -27,7 +27,9 @@ public class ActionWheel extends State {
 			case BUILD:
 				break;
 			case DEFEND:
-				break;
+				showDefendableDirections();
+				setNextState(new Defend(scene));
+				return;
 			case LOAD:
 				if (selectedAction == Action.LOAD || !Settings.askConfirmationOnLoad) {
 					loadSelectedUnit();
