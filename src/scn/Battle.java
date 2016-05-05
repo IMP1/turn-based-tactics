@@ -113,6 +113,10 @@ public class Battle extends Scene {
 			scene.unloadUnit(scene.selectedUnit, u, x, y);
 		}
 		
+		protected int[] getSelectedPosition() {
+			return scene.getSelectedPosition();
+		}
+		
 	}
 	
 	private static interface DelayedAction {
@@ -294,6 +298,7 @@ public class Battle extends Scene {
 			int x = pos[0]; 
 			int y = pos[1];
 			double r = Math.atan2(j - y, i - x);
+			if (r < 0) r += 2 * Math.PI;
 			defendDirectionArc = (int)(r * 4 / Math.PI);
 		}
 	}
@@ -585,7 +590,7 @@ public class Battle extends Scene {
 				System.out.printf("Unloaded %s.\n", u.toString());
 			}
 		};
-		return false;
+		return true;
 	}
 
 	private int[] getSelectedPosition() {
@@ -785,14 +790,14 @@ public class Battle extends Scene {
 			System.out.printf("\t(%d, %d)\n", path[i], path[i+1]);
 			Building blockingBuilding = level.getBuildingAt(path[i], path[i+1]);
 			if (blockingBuilding != null && blockingBuilding.getOwner() != level.getCurrentPlayer()) {
-				System.out.printf("\tBlocked by building!\n", path[i], path[i+1]);
+//				System.out.printf("\tBlocked by building!\n", path[i], path[i+1]);
 				path = Arrays.copyOf(path, i);
 				System.out.printf("\tStopping at (%d, %d).\n", path[i-2], path[i-1]);
 				break;
 			}
 			Unit blockingUnit = level.getUnitAt(path[i], path[i+1]);
 			if (blockingUnit != null && blockingUnit.getOwner() != level.getCurrentPlayer()) {
-				System.out.printf("\tBlocked by unit!\n", path[i], path[i+1]);
+//				System.out.printf("\tBlocked by unit!\n", path[i], path[i+1]);
 				path = Arrays.copyOf(path, i);
 				System.out.printf("\tStopping at (%d, %d).\n", path[i-2], path[i-1]);
 				break;
@@ -921,9 +926,6 @@ public class Battle extends Scene {
 		}
 	}
 
-	public void drawActionWheel() {
-		drawActionWheel(null);
-	}
 	public void drawActionWheel(Unit.Action selectedAction) {
 		int x = selectedUnitPath[selectedUnitPath.length-2];
 		int y = selectedUnitPath[selectedUnitPath.length-1];
@@ -948,10 +950,51 @@ public class Battle extends Scene {
 		}
 	}
 	
-	public void drawDefendDirections() {
-		// TODO draw an arc based on either the mouse position
-		// or a variable set in the update.
-		defendDirectionArc
+	public void drawDefendDirections(int selectedDirection) {
+		int[] pos = getSelectedPosition();
+		int x = pos[0];
+		int y = pos[1];
+		for (int i = 0; i < 8; i ++) {
+			int ox, oy;
+			int sign = i > 3 ? -1 : 1;
+			if (i % 4 == 2) ox = 0;
+			else if (i % 4 == 3) ox = -1;
+			else ox = 1;
+			if (i % 4 == 0) oy = 0;
+			else oy = 1;
+			ox *= sign;
+			oy *= sign;
+			
+			if (i == selectedDirection) {
+				jog.Graphics.setColour(255, 255, 255, 128);
+				jog.Graphics.rectangle(false, (x + ox) * DataTile.TILE_SIZE, (y + oy) * DataTile.TILE_SIZE, DataTile.TILE_SIZE, DataTile.TILE_SIZE);
+				double confirmX = (x + ox + 0.5) * DataTile.TILE_SIZE;
+				double confirmY = (y + oy + 0.5) * DataTile.TILE_SIZE;
+				jog.Graphics.setColour(255, 255, 255);
+				jog.Graphics.circle(true, confirmX, confirmY, 8);
+				jog.Graphics.setColour(0, 0, 0);
+				jog.Graphics.circle(false, confirmX, confirmY, 8);
+				jog.Graphics.printCentred("✓", confirmX, confirmY);
+			} else {
+				jog.Graphics.setColour(255, 255, 255, 96);
+				jog.Graphics.rectangle(false, (x + ox) * DataTile.TILE_SIZE, (y + oy) * DataTile.TILE_SIZE, DataTile.TILE_SIZE, DataTile.TILE_SIZE);
+			}
+		}
+		if (selectedDirection == -1) {
+			drawDefendArc(defendDirectionArc);
+		} else {
+			drawDefendArc(selectedDirection);
+		}
+	}
+	
+	private void drawDefendArc(int direction) {
+		double r = 2 * Math.PI * direction / 8;
+		double theta = 2 * Math.PI / 16;
+		int[] pos = getSelectedPosition();
+		double x = (pos[0] + 0.5) * DataTile.TILE_SIZE;
+		double y = (pos[1] + 0.5) * DataTile.TILE_SIZE;
+		jog.Graphics.setColour(255,255,255,96);
+		jog.Graphics.arc(true, x, y, DataTile.TILE_SIZE * 3.5, r - theta, r + theta);
 	}
 
 	public void drawAttackableUnits() {
@@ -1131,8 +1174,8 @@ public class Battle extends Scene {
 	// TODO remove
 	private void drawDebug() {
 		jog.Graphics.setColour(0, 0, 0);
-		if (selectedAction != null)
-			jog.Graphics.print(selectedAction.toString(), 0, 0);
+		
+		jog.Graphics.print(inputState.toString(), 0, 0);
 		if (selectedUnitPath != null && selectedUnit != null)
 			jog.Graphics.print(String.valueOf(selectedPathDistance) + " / " + selectedUnit.getMoveDistance(), 0, 16);
 		jog.Graphics.print("Turn " + String.valueOf(level.getTurn()), 0, 32);
