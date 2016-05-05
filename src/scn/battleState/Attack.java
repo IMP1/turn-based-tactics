@@ -17,7 +17,7 @@ public class Attack extends State {
 	@Override
 	public void mouseClick(int x, int y, int i, int j) {
 		Unit enemy = level.getUnitAt(i, j);
-		if (target == enemy  || !Settings.askConfirmationOnAttack) {
+		if (target == enemy || !Settings.askConfirmationOnAttack) {
 			attack(i, j);
 			setNextState(new Idle(scene));
 		} else {
@@ -29,6 +29,10 @@ public class Attack extends State {
 
 	@Override
 	public void cancel() {
+		if (target != null) {
+			target = null;
+			return;
+		}
 		unsetAction();
 		setNextState(new ActionWheel(scene));
 	}
