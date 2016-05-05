@@ -130,7 +130,7 @@ public class Level {
 	public Action[] getAvailableActions(final Unit unit, final int x, final int y) {
 		final Unit u = getUnitAt(x, y);
 		final Building b = getBuildingAt(x, y);
-		boolean isObstacle = (b != null || (u != null && unit != u))
+		boolean isObstacle = (b != null || (u != null && unit != u));
 		ArrayList<Action> list = new ArrayList<Action>();
 		
 		if (!isObstacle) { 
