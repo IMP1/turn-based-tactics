@@ -130,34 +130,33 @@ public class Level {
 	public Action[] getAvailableActions(final Unit unit, final int x, final int y) {
 		final Unit u = getUnitAt(x, y);
 		final Building b = getBuildingAt(x, y);
+		boolean isObstacle = (b != null || (u != null && unit != u))
 		ArrayList<Action> list = new ArrayList<Action>();
 		
-		if (b == null && u == null) { 
+		if (!isObstacle) { 
 			if (unit.canAttack()) list.add(Action.DEFEND);
 			if (unit.canAttack()) list.add(Action.ATTACK);
 			if (unit.canBuild()) list.add(Action.BUILD);
-		}
-		
-		if (unit.isCarringUnits()) list.add(Action.UNLOAD);
-		
-		if (u != null && u != unit && u.canStoreUnit(unit)) {
-			list.add(Action.LOAD);
-		} else {
-			if (b != null && b.canStoreUnit(unit)) {
+			if (unit.canMove()) list.add(Action.MOVE);
+			if (unit.isCarringUnits() && canUnitUnloadAt(unit, x, y))
+				list.add(Action.UNLOAD);
+		} else {			
+			if (u != null && u != unit && u.canStoreUnit(unit)) {
+				list.add(Action.LOAD);
+			} else if (b != null && b.canStoreUnit(unit)) {
 				list.add(Action.LOAD);
 			}
 		}
 		
-		if (canUnitMoveTo(unit, x, y)) list.add(Action.MOVE);
-		
 		return list.toArray(new Action[0]);
 	}
 	
-	private boolean canUnitMoveTo(Unit u, int x, int y) {
-		if (!u.canMove()) return false;
-		Unit obstacle = getUnitAt(x, y); 
-		if (obstacle != null && obstacle != u) return false;
-		return true;
+	private boolean canUnitUnloadAt(Unit u, int x, int y) {
+		if (x > 0 && getUnitAt(x - 1, y) == null) return true;
+		if (y > 0 && getUnitAt(x, y - 1) == null) return true;
+		if (x < map.getWidth() - 1 && getUnitAt(x + 1, y) == null) return true;
+		if (y < map.getHeight() - 1 && getUnitAt(x, y + 1) == null) return true;
+		return false;
 	}
 	
 	public int[] getPathTo(final Unit u, final int targetX, final int targetY, final int[] previousPath, final int distanceRemaining) {
