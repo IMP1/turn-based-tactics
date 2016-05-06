@@ -3,6 +3,7 @@ package cls.unit;
 import java.util.ArrayList;
 
 import run.Settings;
+import scn.Battle;
 import lib.Sprite;
 import cls.Player;
 import cls.Player.Faction;
@@ -289,25 +290,7 @@ public class Unit extends cls.GameObject {
 		movesPerformed ++;
 		sprite.setPose(0);
 	}
-	
-	/**
-	 * Draws info about the unit (health, ammo, etc.)
-	 */
-	public void drawInfo() {
-		int w = jog.Graphics.getScissor().width;
-//		int h = jog.Graphics.getScissor().height;
-		jog.Graphics.print(name, 0, 0, w, 16, jog.Graphics.HorizontalAlign.CENTRE);
-		jog.Graphics.setColour(0, 0, 0);
-		jog.Graphics.rectangle(true, 4, 24, w - 8, 4);
-		jog.Graphics.setColour(getHealthColour());
-		jog.Graphics.rectangle(true, 5, 25, (w - 8) * health / 100 - 2, 2);
-		
-		int x = (w - icon.getWidth()) / 2;
-		jog.Graphics.draw(icon, x, 40);
-		// TODO draw fuel
-		// TODO draw ammo
-	}
-	
+
 	protected java.awt.Color getHealthColour() {
 		double h = health / 100.0;
 		int r, g;
@@ -321,13 +304,59 @@ public class Unit extends cls.GameObject {
 		return new java.awt.Color(r, g, 0);
 	}
 	
+	public void drawConciseInfo() {
+		drawUnitInfo(Battle.GUI_INFO_BOX_WIDTH, Battle.GUI_INFO_BOX_HEIGHT);
+	}
+	
 	/**
-	 * Draw the GUI of the actions that this unit can perform (eg moving, attacking).
+	 * Draws info about the unit (health, ammo, etc.)
 	 */
-	public void drawActions() {
-		
+	public void drawFullInfo() {
+		drawCarriedUnits();
+		drawUnitInfo(Battle.GUI_ORDER_BOX_WIDTH, Battle.GUI_ORDER_BOX_HEIGHT);
 	}
 
+	protected void drawIcon(int x, int y) {
+		jog.Graphics.draw(icon, x, y);
+	}
+	
+	protected void drawHealthBar(int x, int y, int w, int h) {
+		jog.Graphics.setColour(0, 0, 0);
+		jog.Graphics.rectangle(true, x, y, w, h);
+		jog.Graphics.setColour(getHealthColour());
+		double healthWidth = w * health / 100;
+		jog.Graphics.rectangle(true, x + 1, y + 1, healthWidth - 2, h - 2);
+	}
+	
+	private void drawUnitInfo(int w, int h) {
+		// draw border
+		jog.Graphics.setColour(255, 255, 255);
+		jog.Graphics.rectangle(true, 0, 0, w, h);
+		jog.Graphics.setColour(0, 0, 0);
+		jog.Graphics.rectangle(false, 0, 0, w, h);
+		
+		jog.Graphics.print(name, 0, 0, w, 16, jog.Graphics.HorizontalAlign.CENTRE);
+		drawHealthBar(4, 24, w - 8, 4);
+		drawIcon((w - icon.getWidth()) / 2, 40);
+		// TODO draw fuel
+		// TODO draw ammo
+	}
+	
+	private void drawCarriedUnits() {
+		final int size = 32;
+		int h = Battle.GUI_ORDER_BOX_HEIGHT;
+		int n = h / size - 1;
+		for (int i = 0; i < storedUnits.size(); i ++) {
+			int x = ((i / n) + 1) * -size + 4;
+			int y = (i % n) * size + (size / 2);
+			jog.Graphics.setColour(255, 255, 255);
+			jog.Graphics.rectangle(true, x, y, size, size);
+			jog.Graphics.setColour(0, 0, 0);
+			jog.Graphics.rectangle(false, x, y, size, size);
+			storedUnits.get(i).drawIcon(x, y);
+		}
+	}
+	
 	@Override
 	public void draw() {
 		if (isMoving) {

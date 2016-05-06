@@ -123,15 +123,15 @@ public class Battle extends Scene {
 		public void call();
 	}
 	
-	private final static int GUI_INFO_BOX_WIDTH = 96;
-	private final static int GUI_INFO_BOX_HEIGHT = 96;
-	private final static int GUI_ORDER_BOX_WIDTH = 128;
-	private final static int GUI_ORDER_BOX_HEIGHT = 256;
+	public final static int GUI_INFO_BOX_WIDTH = 96;
+	public final static int GUI_INFO_BOX_HEIGHT = 96;
+	public final static int GUI_ORDER_BOX_WIDTH = 128;
+	public final static int GUI_ORDER_BOX_HEIGHT = 256;
 	
-	private static final int ACTION_WHEEL_RADIUS = DataTile.TILE_SIZE;
-	private static final int UNLOAD_SELECTION_WIDTH = 128;
-	private static final int UNLOAD_SELECTION_MARGIN = DataTile.TILE_SIZE * 2;
-	private static final int UNLOAD_SELECTION_PADDING = 4;
+	public static final int ACTION_WHEEL_RADIUS = DataTile.TILE_SIZE;
+	public static final int UNLOAD_SELECTION_WIDTH = 128;
+	public static final int UNLOAD_SELECTION_MARGIN = DataTile.TILE_SIZE * 2;
+	public static final int UNLOAD_SELECTION_PADDING = 4;
 	
 	private final static Animation[] turnAnimations = new Animation[] {
 		new Animation(new jog.Image("gfx/turn_1.png"), 1, 10, 10, false, 0.1),
@@ -907,22 +907,16 @@ public class Battle extends Scene {
 			jog.Graphics.rectangle(false, x, y, GUI_INFO_BOX_WIDTH, GUI_INFO_BOX_HEIGHT);
 			jog.Graphics.setScissor(new Rectangle(x, y, GUI_INFO_BOX_WIDTH, GUI_INFO_BOX_HEIGHT));
 				jog.Graphics.translate(x, y);
-					hoveredUnit.drawInfo();
+					hoveredUnit.drawConciseInfo();
 				jog.Graphics.translate(-x, -y);
 			jog.Graphics.setScissor();
 		}
 		if (selectedUnit != null) {
 			final int x = jog.Graphics.getWidth() - GUI_ORDER_BOX_WIDTH - 8;
 			final int y = jog.Graphics.getHeight() - GUI_ORDER_BOX_HEIGHT - 8;
-			jog.Graphics.setColour(255, 255, 255);
-			jog.Graphics.rectangle(true, x, y, GUI_ORDER_BOX_WIDTH, GUI_ORDER_BOX_HEIGHT);
-			jog.Graphics.setColour(0, 0, 0);
-			jog.Graphics.rectangle(false, x, y, GUI_ORDER_BOX_WIDTH, GUI_ORDER_BOX_HEIGHT);
-			jog.Graphics.setScissor(new Rectangle(x, y, GUI_ORDER_BOX_WIDTH, GUI_ORDER_BOX_HEIGHT / 3));
-				jog.Graphics.translate(x, y);
-					selectedUnit.drawInfo();
-				jog.Graphics.translate(-x, -y);
-			jog.Graphics.setScissor();
+			jog.Graphics.translate(x, y);
+			selectedUnit.drawFullInfo();
+			jog.Graphics.translate(-x, -y);
 		}
 	}
 
