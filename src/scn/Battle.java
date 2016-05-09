@@ -949,16 +949,9 @@ public class Battle extends Scene {
 		int x = pos[0];
 		int y = pos[1];
 		for (int i = 0; i < 8; i ++) {
-			int ox, oy;
-			int sign = i > 3 ? -1 : 1;
-			if (i % 4 == 2) ox = 0;
-			else if (i % 4 == 3) ox = -1;
-			else ox = 1;
-			if (i % 4 == 0) oy = 0;
-			else oy = 1;
-			ox *= sign;
-			oy *= sign;
-			
+			int[] offset = getOffsetFromDirection(i);
+			int ox = offset[0];
+			int oy = offset[1];
 			if (i == selectedDirection) {
 				jog.Graphics.setColour(255, 255, 255, 128);
 				jog.Graphics.rectangle(false, (x + ox) * DataTile.TILE_SIZE, (y + oy) * DataTile.TILE_SIZE, DataTile.TILE_SIZE, DataTile.TILE_SIZE);
@@ -979,6 +972,19 @@ public class Battle extends Scene {
 		} else {
 			drawDefendArc(selectedDirection);
 		}
+	}
+	
+	private int[] getOffsetFromDirection(int i) {
+		int ox, oy;
+		int sign = i > 3 ? -1 : 1;
+		if (i % 4 == 2) ox = 0;
+		else if (i % 4 == 3) ox = -1;
+		else ox = 1;
+		if (i % 4 == 0) oy = 0;
+		else oy = 1;
+		ox *= sign;
+		oy *= sign;
+		return new int[] { ox, oy };
 	}
 	
 	private void drawDefendArc(int direction) {
