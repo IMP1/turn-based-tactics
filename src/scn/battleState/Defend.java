@@ -16,8 +16,7 @@ public class Defend extends State {
 	@Override
 	public void mouseClick(int x, int y, int i, int j) {
 		if ((direction == getDirection(i, j)) || !Settings.askConfirmationOnDefend) {
-			// TODO make unit defend in that direction
-			System.out.println("Defending!");
+			defendUnit(direction, i, j);
 			hideDefendableDirections();
 			setNextState(new Idle(scene));
 		} else if (validClick(i, j)) {

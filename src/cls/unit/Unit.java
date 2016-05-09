@@ -228,7 +228,11 @@ public class Unit extends cls.GameObject {
 	public void attack(Unit defender) {
 		
 	}
-	
+
+	public void defendTowards(int direction) {
+		// TODO do defending stuff.
+	}
+
 	@Override
 	public void update(double dt) {
 		sprite.update(dt);
@@ -369,5 +373,5 @@ public class Unit extends cls.GameObject {
 			}
 		}
 	}
-
+	
 }

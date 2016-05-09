@@ -110,7 +110,11 @@ public class Battle extends Scene {
 		}
 		
 		protected void unloadUnit(Unit u, int x, int y) {
-			scene.unloadUnit(scene.selectedUnit, u, x, y);
+			scene.unloadUnit(scene.selectedUnit, u, x, y, scene.selectedUnitPath);
+		}
+		
+		protected void defendUnit(int direction, int x, int y) {
+			scene.defendUnit(scene.selectedUnit, direction, x, y, scene.selectedUnitPath);
 		}
 		
 		protected int[] getSelectedPosition() {
@@ -577,11 +581,11 @@ public class Battle extends Scene {
 		return false;
 	}
 	
-	private boolean unloadUnit(final Unit transport, final Unit u, final int x, final int y) {
+	private boolean unloadUnit(final Unit transport, final Unit u, final int x, final int y, final int[] unitPath) {
 		if (!transport.isCarrying(u)) return false;
 		if (level.getUnitAt(x, y) != null) return false;
 		if (level.getBuildingAt(x, y) != null) return false;
-		moveUnit(transport, selectedUnitPath);
+		moveUnit(transport, unitPath);
 		postMoveAction = new DelayedAction() {
 			@Override
 			public void call() {
@@ -591,6 +595,16 @@ public class Battle extends Scene {
 			}
 		};
 		return true;
+	}
+	
+	private void defendUnit(final Unit unit, final int direction, final int x, final int y, final int[] unitPath) {
+		moveUnit(unit, unitPath);
+		postMoveAction = new DelayedAction() {
+			@Override
+			public void call() {
+				unit.defendTowards(direction);
+			}
+		};
 	}
 
 	private int[] getSelectedPosition() {
