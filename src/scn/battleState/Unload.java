@@ -30,7 +30,6 @@ public class Unload extends State {
 		} else {
 			if ((targetX == i && targetY == j) || !Settings.askConfirmationOnAttack) {
 				unloadUnit(unit, i, j);
-				System.out.printf("Unloading %s at (%d, %d).\n", unit.name, targetX, targetY);
 				hideUnloadableUnits();
 				setNextState(new Idle(scene));
 			} else {
