@@ -238,9 +238,6 @@ public class Battle extends Scene {
 		if (playingMovementAnimation) {
 			movingUnit.getOwner().updateVisibility(map); // TODO move this into unit
 			if (!movingUnit.isMoving()) {
-				if (movingUnit != selectedUnit) {
-					selectUnit(selectedUnit); // reselect the selected unit.
-				} else { selectUnit(null); }
 				movingUnit = null;
 				playingMovementAnimation = false;
 				if (postMoveAction != null) {
