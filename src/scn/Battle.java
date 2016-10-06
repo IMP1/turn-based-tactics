@@ -138,7 +138,7 @@ public class Battle extends Scene {
 	public static final int UNLOAD_SELECTION_PADDING = 4;
 	
 	private final static Animation[] turnAnimations = new Animation[] {
-		new Animation(new jog.Image("gfx/turn_1.png"), 1, 10, 10, false, 0.1),
+		new Animation(new jog.Image("mods/core/resources/turn_1.png"), 1, 10, 10, false, 0.1),
 	};
 	
 	private boolean fogOfWar;

@@ -4,8 +4,8 @@ FOOT 3
 1 2 10
 100 100 1 TRUE FALSE
 2 0 0 FALSE TRUE
-gfx/unit/commando.png 5 4 0.2
-gfx/unit/commando.png 5 4 0.2
+unit/commando.png 5 4 0.2
+unit/commando.png 5 4 0.2
 
 0
 Factory

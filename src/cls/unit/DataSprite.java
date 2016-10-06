@@ -1,6 +1,7 @@
 package cls.unit;
 
 import lib.Sprite;
+import run.Data;
 
 public class DataSprite {
 	public final String imagePath;
@@ -9,7 +10,7 @@ public class DataSprite {
 	public final double frameTime;
 	
 	public DataSprite(String imagePath, int poses, int frames, double frameTime) {
-		this.imagePath = imagePath;
+		this.imagePath = Data.getResource(imagePath);
 		this.poses     = poses;
 		this.frames    = frames;
 		this.frameTime = frameTime;

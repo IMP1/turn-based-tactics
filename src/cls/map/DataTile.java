@@ -8,7 +8,7 @@ import cls.unit.Unit;
 public class DataTile {
 	
 	public final static int TILE_SIZE = 32;
-	public final static jog.Image TILE_IMAGE = new jog.Image("gfx/tiles.png");
+	public final static jog.Image TILE_IMAGE = new jog.Image("mods/core/resources/tiles.png");
 	
 	public final String name;
 	public final int visionCost;

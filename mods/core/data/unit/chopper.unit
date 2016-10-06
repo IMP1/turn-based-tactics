@@ -4,8 +4,8 @@ ROTOR_BLADES 7
 2 4 100
 100 100 2 TRUE TRUE
 3 2 0 FALSE FALSE
-gfx/unit/tank.png 5 3 0.2
-gfx/unit/tank.png 5 3 0.2
+unit/tank.png 5 3 0.2
+unit/tank.png 5 3 0.2
  
 2 INFANTRY 1
 

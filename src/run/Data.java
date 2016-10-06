@@ -1,7 +1,9 @@
 package run;
 
 import java.awt.Rectangle;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import cls.Player.Faction;
@@ -55,6 +57,8 @@ public final class Data {
 		}
 	}
 
+	private static String[] modFolders = new String[0]; 
+			
 	private static DataTile[] tiles = new DataTile[0];
 	private static DataBuilding[] buildings = new DataBuilding[0];
 	private static DataUnit[] units = new DataUnit[0];
@@ -116,6 +120,7 @@ public final class Data {
 			@Override
 			public void run() {
 				setFinished(false);
+				findModFolders();
 				loadTiles();
 				loadBuildings();
 				loadWeapons();
@@ -128,18 +133,52 @@ public final class Data {
 		};
 		dataLoader.start();
 	}
+
+	public static String[] getResources(String folderName) {
+		ArrayList<String> resourceList = new ArrayList<String>();
+		for (String modFolder : modFolders) {
+			String[] folder = jog.Filesystem.enumerate(modFolder + "/" + folderName);
+			resourceList.addAll(Arrays.asList(folder));
+		}
+		return resourceList.toArray(new String[0]);
+	}
+	
+	public static String getResource(String modPath) {
+		String resourcePath = null;
+		for (String modFolder : modFolders) {
+			File resource = jog.Filesystem.getFile("mods/" + modFolder + "/resources/" + modPath); 
+			if (resource.exists()) resourcePath = "mods/" + modFolder + "/resources/" + modPath;
+		}
+		if (resourcePath == null) throw new RuntimeException("No path to file: " + modPath);
+		return resourcePath;
+	}
+	
+	private static void findModFolders() {
+		modFolders = jog.Filesystem.readFile("mods/.loadorder").split("\n");
+		ArrayList<String> modNames = new ArrayList<String>(Arrays.asList(modFolders));
+		for (String mod : modFolders) {
+			if (!jog.Filesystem.getFile("mods/" + mod).exists()) {
+				System.err.printf("[Data] WARNING: Mod '%s' wasn't found.\n", mod);
+				modNames.remove(mod);
+			}
+		}
+		modFolders = modNames.toArray(modFolders);
+	}
 	
 	private static void loadTiles() {
 		setMessage("Loading Tiles...");
 		ArrayList<DataTile> dataTiles = new ArrayList<DataTile>();
-		for (String filename : jog.Filesystem.enumerate("dat/tile")) {
-			try {
-				DataTile t = readTile("dat/tile/" + filename);
-				dataTiles.add(t);
-				System.out.println("[Data] Loaded " + filename);
-			} catch (Exception e) {
-				System.err.printf("Could not read tile '%s'.\n", filename);
-				e.printStackTrace();
+		for (String mod : modFolders) {
+			final String path = "mods/" + mod + "/data/tile";
+			for (String filename : jog.Filesystem.enumerate(path)) {
+				try {
+					DataTile t = readTile(path + "/" + filename);
+					dataTiles.add(t);
+					System.out.println("[Data] Loaded " + filename);
+				} catch (Exception e) {
+					System.err.printf("Could not read tile '%s'.\n", filename);
+					e.printStackTrace();
+				}
 			}
 		}
 		tiles = dataTiles.toArray(tiles);
@@ -148,14 +187,17 @@ public final class Data {
 	private static void loadBuildings() {
 		setMessage("Loading Buildings...");
 		ArrayList<DataBuilding> dataBuildings = new ArrayList<DataBuilding>();
-		for (String filename : jog.Filesystem.enumerate("dat/building")) {
-			try {
-				DataBuilding t = readBuilding("dat/building/" + filename);
-				dataBuildings.add(t);
-				System.out.println("[Data] Loaded " + filename);
-			} catch (Exception e) {
-				System.err.printf("Could not read building '%s'.\n", filename);
-				e.printStackTrace();
+		for (String mod : modFolders) {
+			final String path = "mods/" + mod + "/data/building";
+			for (String filename : jog.Filesystem.enumerate(path)) {
+				try {
+					DataBuilding t = readBuilding(path + "/" + filename);
+					dataBuildings.add(t);
+					System.out.println("[Data] Loaded " + filename);
+				} catch (Exception e) {
+					System.err.printf("Could not read building '%s'.\n", filename);
+					e.printStackTrace();
+				}
 			}
 		}
 		buildings = dataBuildings.toArray(buildings);
@@ -164,14 +206,17 @@ public final class Data {
 	private static void loadWeapons() {
 		setMessage("Loading Weapons...");
 		ArrayList<DataWeapon> dataWeapons = new ArrayList<DataWeapon>();
-		for (String filename : jog.Filesystem.enumerate("dat/weapon")) {
-			try {
-				DataWeapon u = readWeapon("dat/weapon/" + filename);
-				dataWeapons.add(u);
-				System.out.println("[Data] Loaded " + filename);
-			} catch (Exception e) {
-				System.err.printf("Could not read weapon '%s'.\n", filename);
-				e.printStackTrace();
+		for (String mod : modFolders) {
+			final String path = "mods/" + mod + "/data/weapon";
+			for (String filename : jog.Filesystem.enumerate(path)) {
+				try {
+					DataWeapon u = readWeapon(path + "/" + filename);
+					dataWeapons.add(u);
+					System.out.println("[Data] Loaded " + filename);
+				} catch (Exception e) {
+					System.err.printf("Could not read weapon '%s'.\n", filename);
+					e.printStackTrace();
+				}
 			}
 		}
 		weapons = dataWeapons.toArray(weapons);
@@ -180,14 +225,17 @@ public final class Data {
 	private static void loadUnits() {
 		setMessage("Loading Units...");
 		ArrayList<DataUnit> dataActors = new ArrayList<DataUnit>();
-		for (String filename : jog.Filesystem.enumerate("dat/unit")) {
-			try {
-				DataUnit u = readUnit("dat/unit/" + filename);
-				dataActors.add(u);
-				System.out.println("[Data] Loaded " + filename);
-			} catch (Exception e) {
-				System.err.printf("Could not read unit '%s'.\n", filename);
-				e.printStackTrace();
+		for (String mod : modFolders) {
+			final String path = "mods/" + mod + "/data/unit";
+			for (String filename : jog.Filesystem.enumerate(path)) {
+				try {
+					DataUnit u = readUnit(path + "/" + filename);
+					dataActors.add(u);
+					System.out.println("[Data] Loaded " + filename);
+				} catch (Exception e) {
+					System.err.printf("Could not read unit '%s'.\n", filename);
+					e.printStackTrace();
+				}
 			}
 		}
 		units = dataActors.toArray(units);
@@ -196,14 +244,17 @@ public final class Data {
 	private static void loadMaps() {
 		setMessage("Loading Maps...");
 		ArrayList<DataMap> dataMaps = new ArrayList<DataMap>();
-		for (String filename : jog.Filesystem.enumerate("dat/map")) {
-			try {
-				DataMap m = readMap("dat/map/" + filename);
-				dataMaps.add(m);
-				System.out.println("[Data] Loaded " + filename);
-			} catch (Exception e) {
-				System.err.printf("Could not read map '%s'.\n", filename);
-				e.printStackTrace();
+		for (String mod : modFolders) {
+			final String path = "mods/" + mod + "/data/map";
+			for (String filename : jog.Filesystem.enumerate(path)) {
+				try {
+					DataMap m = readMap(path + "/" + filename);
+					dataMaps.add(m);
+					System.out.println("[Data] Loaded " + filename);
+				} catch (Exception e) {
+					System.err.printf("Could not read map '%s'.\n", filename);
+					e.printStackTrace();
+				}
 			}
 		}
 		maps = dataMaps.toArray(maps);
@@ -212,14 +263,17 @@ public final class Data {
 	private static void loadLevels() {
 		setMessage("Loading Levels...");
 		ArrayList<DataLevel> dataLevels = new ArrayList<DataLevel>();
-		for (String filename : jog.Filesystem.enumerate("dat/level")) {
-			try {
-				DataLevel l = readLevel("dat/level/" + filename);
-				dataLevels.add(l);
-				System.out.println("[Data] Loaded " + filename);
-			} catch (Exception e) {
-				System.err.printf("Could not read level '%s'.\n", filename);
-				e.printStackTrace();
+		for (String mod : modFolders) {
+			final String path = "mods/" + mod + "/data/level";
+			for (String filename : jog.Filesystem.enumerate(path)) {
+				try {
+					DataLevel l = readLevel(path + "/" + filename);
+					dataLevels.add(l);
+					System.out.println("[Data] Loaded " + filename);
+				} catch (Exception e) {
+					System.err.printf("Could not read level '%s'.\n", filename);
+					e.printStackTrace();
+				}
 			}
 		}
 		levels = dataLevels.toArray(levels);
