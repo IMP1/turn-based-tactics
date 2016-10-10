@@ -13,13 +13,13 @@ public class Idle extends Battle.State {
 	@Override
 	public void mouseClick(int x, int y, int i, int j) {
 		Unit u = level.getUnitAt(i, j);
-		if (u != null && u.canMove()) {
+		if (u != null && u.canMove() && u.getOwner() == level.getCurrentPlayer()) {
 			setSelectedUnit(u);
 			setNextState(new SelectedUnit(scene));
 			return;
 		}
 		Building b = level.getBuildingAt(i, j);
-		if (b != null) {
+		if (b != null && b.getOwner() == level.getCurrentPlayer()) {
 			setSelectedBuidling(b);
 			setNextState(new SelectedBuilding(scene));
 			return;
