@@ -18,8 +18,12 @@ public class Title extends Scene {
 	
 	@Override
 	public void start() {
-		scaleX = ((double)jog.Graphics.getWidth()) / background.getWidth();
-		scaleY = ((double)jog.Graphics.getHeight()) / background.getHeight();
+		if (background == null) {
+			jog.Graphics.setBackgroundColour(0, 32, 32);
+		} else {
+			scaleX = ((double)jog.Graphics.getWidth()) / background.getWidth();
+			scaleY = ((double)jog.Graphics.getHeight()) / background.getHeight();
+		}
 	}
 	
 	@Override
@@ -37,7 +41,8 @@ public class Title extends Scene {
 	
 	@Override
 	public void draw() {
-		Graphics.draw(background, 0, 0, scaleX, scaleY);
+		if (background != null)
+			Graphics.draw(background, 0, 0, scaleX, scaleY);
 		Graphics.printCentred(Data.getMessage(), Graphics.getWidth() / 2, Graphics.getHeight() / 2);
 	}
 
