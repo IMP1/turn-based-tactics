@@ -11,9 +11,9 @@ import jog.Graphics.HorizontalAlign;
 import lib.Animation;
 import lib.Camera;
 import cls.building.Building;
-import cls.map.UnitBattle;
+import cls.level.Level;
+import cls.level.UnitBattle;
 import cls.map.DataTile;
-import cls.map.Level;
 import cls.map.Map;
 import cls.map.Tile;
 import cls.unit.Unit;
@@ -27,7 +27,7 @@ public class Battle extends Scene {
 	public static abstract class State {
 
 		protected final scn.Battle scene;
-		protected final cls.map.Level level;
+		protected final cls.level.Level level;
 		protected final cls.map.Map map;
 		
 		public State(scn.Battle scene) {
@@ -541,6 +541,7 @@ public class Battle extends Scene {
 				@Override
 				public void call() {
 					attackAnimation.start();
+					attackAnimation.resolve();
 					playingAttackAnimation = true;
 				}
 			};
