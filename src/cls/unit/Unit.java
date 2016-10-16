@@ -43,8 +43,8 @@ public class Unit extends cls.GameObject {
 	public Kind     getUnitKind()       { return data.unitClass;        }
 	public Movement getMovementType()   { return data.movement;         }
 	public int      getMoveDistance()   { return data.moveDistance;     }
-	public int      getVisionDistance() { return data.visionDistance;   }
 	public int      getDefence()        { return data.defence;          }
+	public int      getVisionDistance() { return data.visionDistance;   }
 	public int      getInfluence()      { return data.influence;        }
 	public boolean  canMoveAndAttack()  { return data.canMoveAndAttack; }
 	public boolean  canMoveTwice()      { return false;                 } // TODO add this into unit data.
@@ -65,11 +65,14 @@ public class Unit extends cls.GameObject {
 	private int             spaceForUnits;
 	private ArrayList<Unit> storedUnits;
 	private boolean         isStored;
+	private int             directionDefending;
 	
-	public int     getFuel()     { return fuel;        }
-	public Player  getOwner()    { return owner;       }
-	public int     getHealth()   { return health;      }
-	public boolean isDestroyed() { return isDestroyed; }
+	public int     getFuel()               { return fuel;                    }
+	public Player  getOwner()              { return owner;                   }
+	public int     getHealth()             { return health;                  }
+	public int     getDirectionDefending() { return directionDefending;      }
+	public boolean isDefending()           { return directionDefending > -1; }
+	public boolean isDestroyed()           { return isDestroyed;             }
 	
 	public int getMinimumRange() {
 		if (weapons.length == 0) return -1;
@@ -93,6 +96,20 @@ public class Unit extends cls.GameObject {
 			if (w.getAmmo() > 0) return true;
 		}
 		return false;
+	}
+	
+	public boolean canAttack(Unit target) {
+		for (Weapon w : weapons) {
+			if (w.canAttack(target) && w.getAmmo() > 0) return true;
+		}
+		return false;
+	}
+	
+	public int getDamage(Unit target) {
+		for (Weapon w : weapons) {
+			if (w.canAttack(target) && w.getAmmo() > 0) return w.getDamage();
+		}
+		return 0;
 	}
 	
 	public boolean canBuild() {
@@ -217,6 +234,7 @@ public class Unit extends cls.GameObject {
 	public void move(int[] path) {
 		System.out.printf("Moving %s.\n", name);
 		isMoving = true;
+		directionDefending = -1;
 		movePath = path;
 		pathPosition = -1;
 		nextPathPoint();
@@ -230,7 +248,7 @@ public class Unit extends cls.GameObject {
 	}
 
 	public void defendTowards(int direction) {
-		// TODO do defending stuff.
+		directionDefending = direction;
 	}
 
 	@Override
