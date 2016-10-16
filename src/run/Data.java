@@ -8,7 +8,7 @@ import java.util.HashMap;
 
 import cls.Player.Faction;
 import cls.building.DataBuilding;
-import cls.map.DataLevel;
+import cls.level.DataLevel;
 import cls.map.DataMap;
 import cls.map.DataTile;
 import cls.unit.DataUnit;
