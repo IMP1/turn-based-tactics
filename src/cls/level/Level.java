@@ -1,10 +1,11 @@
-package cls.map;
+package cls.level;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import cls.Player;
 import cls.building.Building;
+import cls.map.Map;
 import cls.unit.DataUnit;
 import cls.unit.Unit;
 import cls.unit.Unit.Action;

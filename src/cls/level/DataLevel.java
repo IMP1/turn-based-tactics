@@ -1,8 +1,9 @@
-package cls.map;
+package cls.level;
 
 import run.Data;
 import cls.Player.Faction;
 import cls.building.DataBuilding;
+import cls.map.DataMap;
 import cls.unit.DataUnit;
 
 public class DataLevel {
