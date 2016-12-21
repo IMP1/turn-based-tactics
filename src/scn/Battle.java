@@ -21,6 +21,7 @@ import cls.unit.Unit.Action;
 import run.Data;
 import run.Settings;
 import scn.Scene;
+import scn.battleState.Idle;
 
 public class Battle extends Scene {
 	
@@ -42,7 +43,16 @@ public class Battle extends Scene {
 		public abstract void drawScreen();
 		
 		protected void setSelectedUnit(Unit u) {
-			scene.selectUnit(u);
+			if (u == null) {
+				scene.shouldDeselectUnit = true;
+			} else {
+				scene.selectUnit(u);
+			}
+		}
+		
+		protected void resetToIdle() {
+			setNextState(new Idle(scene));
+			scene.shouldDeselectUnit = true;
 		}
 		
 		protected void setSelectedBuidling(Building b) {
@@ -156,6 +166,7 @@ public class Battle extends Scene {
 	private boolean[][] selectedUnitAttacks;
 	private Building selectedBuilding;
 	private boolean showUnloadableUnits;
+	private boolean shouldDeselectUnit;
 	private Unit[] unloadableUnits;
 	private Unit unitToUnload;
 	private boolean showDefendDirection;
@@ -271,6 +282,10 @@ public class Battle extends Scene {
 		if (nextState != null) {
 			inputState = nextState;
 			nextState = null;
+		}
+		if (shouldDeselectUnit) {
+			selectUnit(null);
+			shouldDeselectUnit = false;
 		}
 	}
 	
@@ -1187,7 +1202,7 @@ public class Battle extends Scene {
 	private void drawDebug() {
 		jog.Graphics.setColour(0, 0, 0);
 		
-		jog.Graphics.print(inputState.toString(), 0, 0);
+		jog.Graphics.print("Current User-Input State: " + inputState.toString(), 0, 0);
 		if (selectedUnitPath != null && selectedUnit != null)
 			jog.Graphics.print(String.valueOf(selectedPathDistance) + " / " + selectedUnit.getMoveDistance(), 0, 16);
 		jog.Graphics.print("Turn " + String.valueOf(level.getTurn()), 0, 32);

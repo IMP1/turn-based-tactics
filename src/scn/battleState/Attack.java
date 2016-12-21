@@ -19,7 +19,7 @@ public class Attack extends State {
 		Unit enemy = level.getUnitAt(i, j);
 		if (target == enemy || !Settings.askConfirmationOnAttack) {
 			attack(i, j);
-			setNextState(new Idle(scene));
+			resetToIdle();
 		} else {
 			if (level.areEnemies(enemy.getOwner(), scene.getSelectedUnit().getOwner())) {
 				target = enemy;
@@ -45,6 +45,11 @@ public class Attack extends State {
 	@Override
 	public void drawScreen() {
 		if (target != null)	scene.drawAttackInfo(target);
+	}
+	
+	@Override
+	public String toString() {
+		return "Attack";
 	}
 
 }

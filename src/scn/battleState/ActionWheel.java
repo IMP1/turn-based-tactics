@@ -33,7 +33,7 @@ public class ActionWheel extends State {
 			case LOAD:
 				if (selectedAction == Action.LOAD || !Settings.askConfirmationOnLoad) {
 					loadSelectedUnit();
-					setNextState(new Idle(scene));
+					resetToIdle();
 				} else {
 					selectedAction = Action.LOAD;
 				}
@@ -41,7 +41,7 @@ public class ActionWheel extends State {
 			case MOVE:
 				if (selectedAction == Action.MOVE || !Settings.askConfirmationOnMove) {
 					moveSelectedUnit();
-					setNextState(new Idle(scene));
+					resetToIdle();
 				} else {
 					selectedAction = Action.MOVE;
 				}
@@ -73,6 +73,11 @@ public class ActionWheel extends State {
 	@Override
 	public void drawScreen() {
 		
+	}
+	
+	@Override
+	public String toString() {
+		return "Action Wheel";
 	}
 
 }

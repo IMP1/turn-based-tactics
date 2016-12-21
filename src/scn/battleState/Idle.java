@@ -34,5 +34,11 @@ public class Idle extends Battle.State {
 
 	@Override
 	public void drawScreen() {}
+	
+
+	@Override
+	public String toString() {
+		return "Idle";
+	}
 
 }

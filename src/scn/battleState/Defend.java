@@ -18,7 +18,7 @@ public class Defend extends State {
 		if ((direction == getDirection(i, j)) || !Settings.askConfirmationOnDefend) {
 			defendUnit(direction, i, j);
 			hideDefendableDirections();
-			setNextState(new Idle(scene));
+			resetToIdle();
 		} else if (validClick(i, j)) {
 			direction = getDirection(i, j);
 		} else if (direction > -1) {
@@ -59,5 +59,11 @@ public class Defend extends State {
 
 	@Override
 	public void drawScreen() {}
+	
+
+	@Override
+	public String toString() {
+		return "Defend";
+	}
 
 }

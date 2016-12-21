@@ -31,7 +31,7 @@ public class Unload extends State {
 			if ((targetX == i && targetY == j) || !Settings.askConfirmationOnAttack) {
 				unloadUnit(unit, i, j);
 				hideUnloadableUnits();
-				setNextState(new Idle(scene));
+				resetToIdle();
 			} else {
 				if (scene.canSelectedUnitUnload(i, j)) {
 					targetX = i;
@@ -58,6 +58,11 @@ public class Unload extends State {
 	@Override
 	public void drawScreen() {
 		scene.drawUnloadableUnits();
+	}
+	
+	@Override
+	public String toString() {
+		return "Unload";
 	}
 
 }
