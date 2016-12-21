@@ -64,8 +64,11 @@ public class Player {
 	}
 	
 	public void updateUnits(double dt) {
-		for (Unit u : units) {
-			u.update(dt);
+		for (int i = units.size() - 1; i >= 0; i --) {
+			units.get(i).update(dt);
+			if (units.get(i).isDestroyed()) {
+				units.remove(i);
+			}
 		}
 	}
 	
