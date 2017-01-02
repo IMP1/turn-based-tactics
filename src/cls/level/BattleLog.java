@@ -26,7 +26,7 @@ public class BattleLog {
 	private int startingPlayer;
 	private ArrayList<Action> log;
 	
-	protected BattleLog(int startingPlayer) {
+	public BattleLog(int startingPlayer) {
 		this.startingPlayer = startingPlayer;
 		this.log = new ArrayList<Action>();
 	}
@@ -38,6 +38,14 @@ public class BattleLog {
 
 	public void unitLoad(Unit u, int oldX, int oldY, Unit transport, int tx, int ty) {
 		Action a = new Action(ActionType.UNIT_LOAD, oldX, oldY, u.name, tx, ty, transport.name);
+	}
+	
+	public void unloadUnit(Unit u, int oldX, int oldY, int newX, int newY) {
+		
+	}
+	
+	public void buildUnit(Unit u, int x, int y) {
+		
 	}
 	
 }
