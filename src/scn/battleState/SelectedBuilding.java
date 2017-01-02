@@ -27,4 +27,9 @@ public class SelectedBuilding extends State {
 		// scene.drawBuildingOptions();
 	}
 
+	@Override
+	public String toString() {
+		return "Selected Building";
+	}
+	
 }

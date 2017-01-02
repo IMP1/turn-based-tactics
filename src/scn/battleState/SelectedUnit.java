@@ -19,7 +19,8 @@ public class SelectedUnit extends State {
 	
 	@Override
 	public void cancel() {
-		setNextState(new Idle(scene));
+		setSelectedUnit(null);
+		resetToIdle();
 	}
 
 	@Override
@@ -29,5 +30,11 @@ public class SelectedUnit extends State {
 
 	@Override
 	public void drawScreen() {}
+	
+
+	@Override
+	public String toString() {
+		return "Selected Unit";
+	}
 
 }
