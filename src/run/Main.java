@@ -5,18 +5,18 @@ import java.util.Arrays;
 
 public class Main extends Game {
 	
-	public static final int PATCH_NUMBER = 0;
-	public static final String VERSION = "0.0.0";
+	public  static final int      PATCH_NUMBER = 0;
+	public  static final String   VERSION = "0.0.0";
 
 	private static final String[] TITLE_BACKGROUNDS = getTitleBackgrounds();
-	private static final String TITLE = "Battleground";
-	private static final int WIDTH = 800;
-	private static final int HEIGHT = 600;
+	private static final String   TITLE = "Battleground";
+	private static final int      WIDTH = 800;
+	private static final int      HEIGHT = 600;
 	
 	public static jog.Image titleBackground;
 	
 	static {
-		// DEBUGGING CODE
+		// DEBUGGING CODE TODO: have actual settings menu.
 		Settings.askConfirmationOnMove = false;
 		Settings.askConfirmationOnLoad = false;
 	}
@@ -55,6 +55,5 @@ public class Main extends Game {
 		}
 		new Main();
 	}
-	
 
 }
